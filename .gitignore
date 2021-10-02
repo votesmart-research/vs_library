@@ -128,4 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# Custom ignore files
 .DS_Store
+*.ini
