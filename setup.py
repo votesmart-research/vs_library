@@ -11,7 +11,8 @@ config = {
     'author_email': "jtai.dvlp@gmail.com",
     'version': '0.0.1',
     'install_requires': ['pandas', 'odfpy', 'pg8000','fuzzywuzzy', 'python-Levenshtein', 'tabulate'],
-    'packages': ['vs_libary'],
+    'url': 'https://github.com/votesmart-projects/vs_library',
+    'packages': ['vs_library'],
     'name': 'vs_library'
 }
 
