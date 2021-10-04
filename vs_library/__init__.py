@@ -1,4 +1,4 @@
-import cli
-import database
-import tools
-import database
+from cli import *
+from database import *
+from tools import *
+from database import *
