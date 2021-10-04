@@ -130,4 +130,5 @@ dmypy.json
 
 # Custom ignore files
 .DS_Store
+*/.DS_Store
 *.ini
