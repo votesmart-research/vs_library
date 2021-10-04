@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 try:
     from setuptools import setup
 except ImportError:
@@ -26,7 +26,7 @@ config = {
     'version': '0.0.2',
     'install_requires': install_requires,
     'url': 'https://github.com/votesmart-projects/vs_library',
-    'packages': ['vs_library'],
+    'packages': ['vs_library', 'vs_library.cli', 'vs_library.database', 'vs_library.tools', 'vs_library.vsdb'],
     'name': 'vs_library'
 }
 
