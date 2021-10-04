@@ -6,7 +6,6 @@ from vs_library.cli import Node, NodeBundle, DecoyNode, textformat
 from vs_library.cli.objects import Command, Display, Prompt, Table
 
 
-
 def will_it_int(response):
     try:
         int(response)
@@ -84,11 +83,11 @@ class AddConnection(NodeBundle):
         self.__prompt_4.clear()
 
     def _populate_table(self):
-        self.__table_0.table = [["Host", self.__prompt_0.option_responses(string=True)],
-                                ["Database Name", self.__prompt_1.option_responses(string=True)],
-                                ["Port Number", self.__prompt_2.option_responses(string=True)],
-                                ["Username", self.__prompt_3.option_responses(string=True)],
-                                ["Password", self.__prompt_4.option_responses(string=True)]]
+        self.__table_0.table = [[textformat.apply("Host", emphases=['bold']), self.__prompt_0.responses],
+                                [textformat.apply("Database Name", emphases=['bold']), self.__prompt_1.responses],
+                                [textformat.apply("Port Number", emphases=['bold']), self.__prompt_2.responses],
+                                [textformat.apply("Username", emphases=['bold']), self.__prompt_3.responses],
+                                [textformat.apply("Password", emphases=['bold']), self.__prompt_4.responses]]
 
 
 class SelectConnection(NodeBundle):
