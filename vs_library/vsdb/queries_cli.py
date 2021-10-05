@@ -1,10 +1,11 @@
+
 # built-ins
 import re
 
 # internal packages
 from . import references, queries
-from vs_library.cli import Node, NodeBundle, DecoyNode, textformat
-from vs_library.cli.objects import Command, Display, Prompt, Table
+from ..cli import Node, NodeBundle, DecoyNode, textformat
+from ..cli.objects import Command, Display, Prompt, Table
 
 
 def is_validyear(x):

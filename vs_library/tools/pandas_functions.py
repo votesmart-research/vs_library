@@ -1,4 +1,5 @@
 
+# built-ins
 import os
 
 # external packages
@@ -23,7 +24,7 @@ def read_spreadsheet(filepath):
             df = pandas.DataFrame()
             return df, f"File not imported. Extension: \'{ext}\' not recognized"
 
-        return df, f"File successfully imported as {os.path.basename(filepath)}"
+        return df, f"File successfully imported as \'{os.path.basename(filepath)}\'"
 
     except Exception as e:
         
@@ -48,7 +49,7 @@ def to_spreadsheet(df, filepath):
         else:
             return False, f"File not exported. Extension: \'{ext}\' not recognized"
 
-        return True, f"File successfully exported to {os.path.abspath(filepath)}"
+        return True, f"File successfully exported to \'{os.path.abspath(filepath)}\'"
 
     except Exception as e:
         return False, e

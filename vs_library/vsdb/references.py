@@ -65,6 +65,8 @@ FINSOURCE = {
     '4': 'FollowTheMoney.org v2'
     }
 
+# Shows a key-value pair between state abbreviation and state name from the 'state' table
+# SELECT state_id, name FROM state
 STATE = {
     'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
     'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',

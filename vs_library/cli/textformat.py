@@ -1,7 +1,3 @@
-"""
-The module contains the classes that formats text on the command line with colors, fonts and other typographical
-elements.
-"""
 
 class TextEmphasis:
     END = '\033[0m'
