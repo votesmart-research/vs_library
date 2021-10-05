@@ -10,12 +10,36 @@ from . import objects, textformat
 
 class Engine:
 
-    """The Engine class manages and runs the link nodes of cli objects."""
+    """Runs, stores and remember nodes of CliObjects.
+    
+    Attributes
+    ----------
+    current_node: Node
+        The current selection of a node by user selection
 
-    def __init__(self, node, loop=False):
+    node_selection: array    
+        Stores node selection and remembers the node selected
+    
+    hideout_menu: Prompt CliObject
+        A menu that presents the options for the user to traverse back to a node, 
+        restart the application or quit the application
+    
+    restart_menu: Prompt CliObject
+        A menu that presents the options for the user to restart or quit the application
 
-        self.__current_node = node
-        self.__node_selection = [node]
+    """
+
+    def __init__(self, start_node, loop=False):
+
+        """
+        Parameters
+        ----------
+        start_node: Node
+        
+        """
+
+        self.__current_node = start_node
+        self.__node_selection = [start_node]
 
         # will trigger restart menu if set to True
         self.loop = loop
@@ -80,7 +104,8 @@ class Engine:
 
     def run(self):
         
-        """Traversed through all the nodes by setting to their next intended child while also executing each individual nodes themselves"""
+        """Traversed through all the nodes by setting to their next intended child while also executing each individual 
+        nodes themselves"""
 
         while True:
 
@@ -141,9 +166,10 @@ class Engine:
 
 class Node:
 
-    """The Node class is an encapsulation of CliObjects, to allow for traversing between objects."""
+    """An encapsulation of CliObjects, to allow for traversing between objects."""
 
-    def __init__(self, object, parent=None, name='node', show_instructions=False, clear_screen=False, acknowledge=False, store=True):
+    def __init__(self, object, parent=None, name='node', show_instructions=False, clear_screen=False, 
+                 acknowledge=False, store=True):
 
         self.object = object
         self.__id = id(self)
@@ -224,7 +250,7 @@ class Node:
 
 class NodeBundle:
 
-    """The NodeBundle class holds can contain a collection of LinkNodes."""
+    """Can contain a group (bundle) of LinkNodes."""
 
     def __init__(self, entry_node, exit_node, parent=None, name='node'):
 

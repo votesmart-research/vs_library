@@ -1,3 +1,4 @@
+
 # built-ins
 import os
 import time
@@ -8,6 +9,8 @@ from dataclasses import dataclass, field
 import pandas
 import pg8000
 from pg8000.dbapi import ProgrammingError
+
+from ..tools import pandas_functions
 
 
 @dataclass
@@ -275,9 +278,9 @@ class QueryTool:
 
         try:
             df = self.results(as_format='pandas_df')
-            df.to_csv(filepath, index=False)
+            success, message = pandas_functions.to_spreadsheet(df, filepath=filepath)
             
-            return True, f"Query results successfully exported to {filepath}"
+            return success, message
             
         except Exception as e:
             return False, str(e)

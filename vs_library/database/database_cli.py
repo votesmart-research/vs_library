@@ -1,9 +1,9 @@
 
 # internal packages
-from vs_library.database import database
-from vs_library.tools import pandas_functions_cli
-from vs_library.cli import Node, NodeBundle, DecoyNode, textformat
-from vs_library.cli.objects import Command, Display, Prompt, Table
+from . import database
+from ..tools import pandas_functions_cli
+from ..cli import Node, NodeBundle, DecoyNode, textformat
+from ..cli.objects import Command, Display, Prompt, Table
 
 
 def will_it_int(response):
@@ -58,7 +58,7 @@ class AddConnection(NodeBundle):
         self.__prompt_5.options = {
             '1': Command(self._execute, value='Yes'),
             '2': Command(lambda: self.__exit_node.set_next(self.__entry_node), value="Re-enter responses",
-                         command=Command(self._clear_all)),
+                         command=Command(self.clear_all)),
             '3': "Discard Changes"
             }
 
@@ -75,7 +75,7 @@ class AddConnection(NodeBundle):
 
         return self.connection_manager.create(new_connection)
 
-    def _clear_all(self):
+    def clear_all(self):
         self.__prompt_0.clear()
         self.__prompt_1.clear()
         self.__prompt_2.clear()
@@ -128,6 +128,7 @@ class SelectConnection(NodeBundle):
     def _execute(self):
         
         self.__selected_connection.clear()
+
         response = self.__prompt_0.responses if self.__prompt_0.responses else 0
         connection_info = self.connection_manager.read(response)
 
@@ -176,17 +177,17 @@ class EditConnection(NodeBundle):
                                  show_instructions=True)
 
         self.__node_0 = Node(self.__prompt_1, name=f'{name}_host', parent=self.__entry_node, 
-                             show_instructions=True)
+                             show_instructions=True, store=False)
         self.__node_1 = Node(self.__prompt_2, name=f'{name}_database', parent=self.__entry_node, 
-                             show_instructions=True)
+                             show_instructions=True, store=False)
         self.__node_2 = Node(self.__prompt_3, name=f'{name}_port', parent=self.__entry_node, 
-                             show_instructions=True)
+                             show_instructions=True, store=False)
         self.__node_3 = Node(self.__prompt_4, name=f'{name}_username', parent=self.__entry_node, 
-                             show_instructions=True)
+                             show_instructions=True, store=False)
         self.__node_4 = Node(self.__prompt_5, name=f'{name}_password', parent=self.__entry_node, 
-                             show_instructions=True)
+                             show_instructions=True, store=False)
         self.__node_5 = Node(self.__prompt_6, name=f'{name}_confirm', parent=self.__entry_node, 
-                             show_instructions=True)
+                             show_instructions=True, store=False)
         self.__node_6 = Node(self.__prompt_7, name=f'{name}_delete', parent=self.__entry_node)
 
         self.__exit_node = DecoyNode(name=f'{name}_lastnode', parent=self.__node_5)
@@ -213,21 +214,21 @@ class EditConnection(NodeBundle):
             }
 
         self.__prompt_6.options = {
-            '1': Command(self._execute, value='Save Changes', 
-                                     command=Command(lambda: self.__node_5.set_next(self.__exit_node))),
+            '1': Command(self._save_changes, value='Save Changes', 
+                         command=Command(lambda: self.__node_5.set_next(self.__exit_node))),
             '2': Command(lambda: self.__node_5.set_next(self.__exit_node), value='Discard Changes'),
             '3': Command(lambda: self.__node_5.set_next(self.__entry_node), value='Return to Editing')
             }
         
         self.__prompt_7.options = {
             '1': Command(self._delete_connection, value='Yes',
-                                     command=Command(lambda: self.__node_6.set_next(self.__exit_node))),
+                         command=Command(lambda: self.__node_6.set_next(self.__exit_node))),
             '2': Command(lambda: self.__node_6.set_next(self.__entry_node), value='No')
             }
 
         super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
 
-    def _execute(self):
+    def _save_changes(self):
         connection_info = next(iter(self.connection_to_edit))
         self.connection_manager.update(connection_info)
 

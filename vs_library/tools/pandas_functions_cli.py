@@ -4,8 +4,8 @@ from tkinter import Tk, filedialog
 
 # internal packages
 from . import pandas_functions
-from vs_library.cli import Node, NodeBundle, DecoyNode, textformat
-from vs_library.cli.objects import Command, Display, Prompt
+from ..cli import Node, NodeBundle, DecoyNode, textformat
+from ..cli.objects import Command, Display, Prompt
 
 
 class ImportSpreadsheet(NodeBundle):
@@ -19,15 +19,19 @@ class ImportSpreadsheet(NodeBundle):
         self.__display_0 = Display("Opening File Dialog...", command=Command(self._filedialog))
         self.__command_0 = Command(self._execute)
         self.__prompt_0 = Prompt("Error reading file: {error}. What would you like to do?")
-        self.__prompt_1 = Prompt("{message} Would you like to continue?")
+        self.__prompt_1 = Prompt("{message}. Would you like to continue?")
         
         # NODES
         self.__entry_node = Node(self.__display_0, name=f'{name}_file-dialog', 
                              show_instructions=True)
+
         self.__node_0 = Node(self.__command_0, name=f'{name}_read-file', parent=self.__entry_node, 
                              store=False)
-        self.__node_1 = Node(self.__prompt_0, name=f'{name}_error', parent=self.__node_0)
-        self.__node_2 = Node(self.__prompt_1, name=f'{name}_continue', parent=self.__node_0)
+        self.__node_1 = Node(self.__prompt_0, name=f'{name}_error', parent=self.__node_0,
+                             store=False)
+        self.__node_2 = Node(self.__prompt_1, name=f'{name}_continue', parent=self.__node_0,
+                             store=False)
+
         self.__exit_node = DecoyNode(name=f'{name}_last-node', parent=self.__node_2)
 
         self.__entry_node.adopt(self.__entry_node)
@@ -100,7 +104,8 @@ class ExportSpreadsheet(NodeBundle):
                              clear_screen=True, show_instructions=True)
         self.__node_0 = Node(self.__command_0, name=f'{name}_export-file', parent=self.__entry_node,
                              acknowledge=True, store=False)
-        self.__node_1 = Node(self.__prompt_1, name=f'{name}_error', parent=self.__node_0)
+        self.__node_1 = Node(self.__prompt_1, name=f'{name}_error', parent=self.__node_0,
+                             store=False)
         self.__exit_node = DecoyNode(name=f'{name}_last-node', parent=self.__node_0)
 
         self.__entry_node.adopt(self.__entry_node)
