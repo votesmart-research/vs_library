@@ -36,30 +36,36 @@ class AddConnection(NodeBundle):
 
         # NODES
         self.__entry_node = Node(self.__prompt_0, name=f'{name}_hostname', 
-                                 show_instructions=True)
+                                 show_hideout=True)
 
         self.__node_0 = Node(self.__prompt_1, name=f'{name}_database', parent=self.__entry_node, 
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_1 = Node(self.__prompt_2, name=f'{name}_port', parent=self.__node_0, 
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_2 = Node(self.__prompt_3, name=f'{name}_username', parent=self.__node_1, 
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_3 = Node(self.__prompt_4, name=f'{name}_password', parent=self.__node_2, 
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_4 = Node(self.__table_0, name=f'{name}_responses', parent=self.__node_3,
-                             show_instructions=True, store=False, clear_screen=True)
+                             show_hideout=True, store=False, clear_screen=True)
 
-        self.__exit_node = Node(self.__prompt_5, name=f'{name}_confirm', parent=self.__node_4, 
-                                show_instructions=True, store=False)
+        self.__node_5 = Node(self.__prompt_5, name=f'{name}_confirm', parent=self.__node_4, 
+                                show_hideout=True, store=False)
+
+        self.__exit_node = DecoyNode(name=f'{name}_last-node', parent=self.__node_5)
+
+        self.__node_5.adopt(self.__entry_node)
 
         # CONFIGURATIONS
         self.__table_0.table_header = "Connection Info"
 
         self.__prompt_5.options = {
-            '1': Command(self._execute, value='Yes'),
-            '2': Command(lambda: self.__exit_node.set_next(self.__entry_node), value="Re-enter responses",
+            '1': Command(self._execute, value='Yes',
+                         command=Command(lambda: self.__node_5.set_next(self.__exit_node))),
+            '2': Command(lambda: self.__node_5.set_next(self.__entry_node), value="Re-enter responses",
                          command=Command(self.clear_all)),
-            '3': "Discard Changes"
+            '3': Command(lambda: self.__node_5.set_next(self.__exit_node), value="Discard Changes",
+                         command=Command(self.clear_all))
             }
 
         super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
@@ -103,7 +109,7 @@ class SelectConnection(NodeBundle):
 
         # OBJECTS
         self.__table_0 = Table([[]], header=True, 
-                               command=Command(self._populate_table, respond=True))
+                               command=Command(self._populate_table))
 
         self.__prompt_0 = Prompt("Select a connection by connection_id", 
                                  command=Command(self._execute, respond=True))
@@ -141,12 +147,13 @@ class SelectConnection(NodeBundle):
 
     def _populate_table(self):
         connections, msg = self.connection_manager.read()
+
         self.__table_0.table = [['connection_id','host', 'database', 'port', 'user']]
+        self.__table_0.description = msg
 
         for connection in connections:
             self.__table_0.table.append([connection.connection_id, connection.host, connection.database, connection.port, connection.user])
-
-        return msg
+        
 
     @property
     def selected_connection(self):
@@ -164,30 +171,30 @@ class EditConnection(NodeBundle):
 
         # OBJECTS
         self.__prompt_0 = Prompt("Which of the following would you like to change?")
-        self.__prompt_1 = Prompt("Host Name", command=Command(self._update_host))
-        self.__prompt_2 = Prompt("Database Name", command=Command(self._update_database))
-        self.__prompt_3 = Prompt("Port Number", command=Command(self._update_port), verification=will_it_int)
-        self.__prompt_4 = Prompt("Username", command=Command(self._update_user))
-        self.__prompt_5 = Prompt("Password", command=Command(self._update_password))
+        self.__prompt_1 = Prompt(textformat.apply("Host Name", emphases=['bold']), command=Command(self._update_host))
+        self.__prompt_2 = Prompt(textformat.apply("Database Name", emphases=['bold']), command=Command(self._update_database))
+        self.__prompt_3 = Prompt(textformat.apply("Port Number", emphases=['bold']), command=Command(self._update_port), verification=will_it_int)
+        self.__prompt_4 = Prompt(textformat.apply("Username", emphases=['bold']), command=Command(self._update_user))
+        self.__prompt_5 = Prompt(textformat.apply("Password", emphases=['bold']), command=Command(self._update_password))
         self.__prompt_6 = Prompt("Done Editing?")
         self.__prompt_7 = Prompt("Are you sure you want to delete this connection?")
 
         # NODES
         self.__entry_node = Node(self.__prompt_0, name=f'{name}_selection',
-                                 show_instructions=True)
+                                 show_hideout=True)
 
         self.__node_0 = Node(self.__prompt_1, name=f'{name}_host', parent=self.__entry_node, 
-                             show_instructions=True, store=False)
+                             store=False)
         self.__node_1 = Node(self.__prompt_2, name=f'{name}_database', parent=self.__entry_node, 
-                             show_instructions=True, store=False)
+                             store=False)
         self.__node_2 = Node(self.__prompt_3, name=f'{name}_port', parent=self.__entry_node, 
-                             show_instructions=True, store=False)
+                             store=False)
         self.__node_3 = Node(self.__prompt_4, name=f'{name}_username', parent=self.__entry_node, 
-                             show_instructions=True, store=False)
+                             store=False)
         self.__node_4 = Node(self.__prompt_5, name=f'{name}_password', parent=self.__entry_node, 
-                             show_instructions=True, store=False)
+                             store=False)
         self.__node_5 = Node(self.__prompt_6, name=f'{name}_confirm', parent=self.__entry_node, 
-                             show_instructions=True, store=False)
+                             store=False)
         self.__node_6 = Node(self.__prompt_7, name=f'{name}_delete', parent=self.__entry_node)
 
         self.__exit_node = DecoyNode(name=f'{name}_lastnode', parent=self.__node_5)
@@ -204,13 +211,13 @@ class EditConnection(NodeBundle):
 
         # CONFIGURATIONS
         self.__prompt_0.options = {
-            '1': Command(lambda: self.__entry_node.set_next(self.__node_0), value='Host Name'), 
-            '2': Command(lambda: self.__entry_node.set_next(self.__node_1), value='Database Name'), 
-            '3': Command(lambda: self.__entry_node.set_next(self.__node_2), value='Port Number'), 
-            '4': Command(lambda: self.__entry_node.set_next(self.__node_3), value='Username'), 
-            '5': Command(lambda: self.__entry_node.set_next(self.__node_4), value='Password'),
-            '6': Command(lambda: self.__entry_node.set_next(self.__exit_node), value='Change Nothing'),
-            'D': Command(lambda: self.__entry_node.set_next(self.__node_6), value='Delete Connection')
+            '1': Command(lambda: self.__entry_node.set_next(self.__node_0), value="Host Name"), 
+            '2': Command(lambda: self.__entry_node.set_next(self.__node_1), value="Database Name"), 
+            '3': Command(lambda: self.__entry_node.set_next(self.__node_2), value="Port Number"), 
+            '4': Command(lambda: self.__entry_node.set_next(self.__node_3), value="Username"), 
+            '5': Command(lambda: self.__entry_node.set_next(self.__node_4), value="Password"),
+            '6': Command(lambda: self.__entry_node.set_next(self.__exit_node), value="Change Nothing"),
+            'D': Command(lambda: self.__entry_node.set_next(self.__node_6), value="Delete Connection")
             }
 
         self.__prompt_6.options = {
@@ -273,7 +280,7 @@ class EstablishConnection(NodeBundle):
         
         # NODES
         self.__entry_node = Node(self.__display_0, name=f'{name}_connecting-msg',
-                                 show_instructions=True, store=False)
+                                 show_hideout=True, store=False)
         self.__node_0 = Node(self.__command_0, name=f'{name}_connecting', parent=self.__entry_node, 
                                      acknowledge=True, store=False)
         self.__node_1 = Node(self.__prompt_0, name=f'{name}_failed', parent=self.__node_0)
@@ -327,7 +334,7 @@ class QueryExecution(NodeBundle):
         self.__prompt_0 = Prompt("Failed to run query. What do you want to do?")
         
         self.__entry_node = Node(self.__display_0, name=f'{name}_executing', 
-                                     show_instructions=True)
+                                     show_hideout=True)
         self.__node_0 = Node(self.__display_1, name=f'{name}_query-results', parent=self.__entry_node)
         self.__node_1 = Node(self.__prompt_0, name=f'{name}_query-failed', parent=self.__entry_node)
         self.__exit_node = DecoyNode(name=f'{name}_last', parent=self.__node_0)
