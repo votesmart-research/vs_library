@@ -85,6 +85,7 @@ def apply(raw_text, emphases=[None], text_color=None, bg_color=None):
     
     formatted = raw_text
     
+    # a function to add sequences to text
     def cast(seq):
         nonlocal formatted
         if seq not in formatted:

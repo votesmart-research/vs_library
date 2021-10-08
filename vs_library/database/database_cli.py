@@ -1,5 +1,6 @@
 
 # internal packages
+import re
 from . import database
 from ..tools import pandas_functions_cli
 from ..cli import Node, NodeBundle, DecoyNode, textformat
@@ -16,9 +17,17 @@ def will_it_int(response):
 
 class AddConnection(NodeBundle):
 
-    """Prompts user to enter necessary information for a connection to be stored."""
 
     def __init__(self, connection_manager, parent=None):
+
+        """
+        Prompts user to enter necessary information for a connection to be stored.
+
+        Parameters
+        ----------
+        connection_manager : database.ConnectionManager
+            the controller of this bundle
+        """
 
         name = 'add-connection'
         self.connection_manager = connection_manager
@@ -50,7 +59,7 @@ class AddConnection(NodeBundle):
                              show_hideout=True, store=False, clear_screen=True)
 
         self.__node_5 = Node(self.__prompt_5, name=f'{name}_confirm', parent=self.__node_4, 
-                                show_hideout=True, store=False)
+                             show_hideout=True, store=False, acknowledge=True)
 
         self.__exit_node = DecoyNode(name=f'{name}_last-node', parent=self.__node_5)
 
@@ -60,12 +69,12 @@ class AddConnection(NodeBundle):
         self.__table_0.table_header = "Connection Info"
 
         self.__prompt_5.options = {
-            '1': Command(self._execute, value='Yes',
+            '1': Command(self._execute, value='Yes', respond=True,
                          command=Command(lambda: self.__node_5.set_next(self.__exit_node))),
             '2': Command(lambda: self.__node_5.set_next(self.__entry_node), value="Re-enter responses",
-                         command=Command(self.clear_all)),
+                         command=Command(self.clear_all, respond=True)),
             '3': Command(lambda: self.__node_5.set_next(self.__exit_node), value="Discard Changes",
-                         command=Command(self.clear_all))
+                         command=Command(self.clear_all, respond=True))
             }
 
         super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
@@ -79,14 +88,19 @@ class AddConnection(NodeBundle):
         new_connection.user = self.__prompt_3.responses
         new_connection.password = self.__prompt_4.responses
 
-        return self.connection_manager.create(new_connection)
+        msg = self.connection_manager.create(new_connection)
+
+        return textformat.apply(msg, emphases=['italic'], text_color='green')
 
     def clear_all(self):
+        # must clear results to prevent from uninteded edits
         self.__prompt_0.clear()
         self.__prompt_1.clear()
         self.__prompt_2.clear()
         self.__prompt_3.clear()
         self.__prompt_4.clear()
+
+        return textformat.apply("All responses are cleared.", emphases=['italic'], bg_color='bright_yellow')
 
     def _populate_table(self):
         self.__table_0.table = [[textformat.apply("Host", emphases=['bold']), self.__prompt_0.responses],
@@ -98,13 +112,21 @@ class AddConnection(NodeBundle):
 
 class SelectConnection(NodeBundle):
 
-    """Prompts user to select a connection from a table of stored connection"""
-
     def __init__(self, connection_manager, parent=None):
+
+        """
+        Prompts user to select a connection from a table of stored connection
+
+        Parameters
+        ----------
+        connection_manager : database.ConnectionManager
+            the controller of this bundle
+        """
 
         name = 'select-connection'
 
         self.connection_manager = connection_manager
+        # list is a memory location such that it can be referenced
         self.__selected_connection = []
 
         # OBJECTS
@@ -133,17 +155,20 @@ class SelectConnection(NodeBundle):
     
     def _execute(self):
         
+        # clears the list in order to append newly selected connection
         self.__selected_connection.clear()
 
+        # ConnectionManager.read() requires a str or an int
+        # prompt.responses returns an empty list instead of a str or int
         response = self.__prompt_0.responses if self.__prompt_0.responses else 0
-        connection_info = self.connection_manager.read(response)
+        connection_info, msg = self.connection_manager.read(response)
 
         if connection_info:
             self.selected_connection.append(connection_info)
             self.__node_0.set_next(self.__exit_node)
         else:
             self.__node_0.set_next(self.__entry_node)
-            return textformat.apply("Selected connection cannot be found", emphases=['italic'], text_color='red')
+            return textformat.apply(msg, emphases=['italic'], text_color='red')
 
     def _populate_table(self):
         connections, msg = self.connection_manager.read()
@@ -153,7 +178,6 @@ class SelectConnection(NodeBundle):
 
         for connection in connections:
             self.__table_0.table.append([connection.connection_id, connection.host, connection.database, connection.port, connection.user])
-        
 
     @property
     def selected_connection(self):
@@ -164,6 +188,18 @@ class EditConnection(NodeBundle):
     
     def __init__(self, connection_manager, selected_connection, parent=None):
 
+        """
+        Edit and update an existing connection
+
+        Parameters
+        ----------
+        connection_manager : database.ConnectionManager
+            the controller of this bundle
+
+        selected_connection: list
+            may refer to the list in SelectConnection bundle
+        """
+        
         name = 'edit-connection'
         
         self.connection_manager = connection_manager
@@ -171,11 +207,16 @@ class EditConnection(NodeBundle):
 
         # OBJECTS
         self.__prompt_0 = Prompt("Which of the following would you like to change?")
-        self.__prompt_1 = Prompt(textformat.apply("Host Name", emphases=['bold']), command=Command(self._update_host))
-        self.__prompt_2 = Prompt(textformat.apply("Database Name", emphases=['bold']), command=Command(self._update_database))
-        self.__prompt_3 = Prompt(textformat.apply("Port Number", emphases=['bold']), command=Command(self._update_port), verification=will_it_int)
-        self.__prompt_4 = Prompt(textformat.apply("Username", emphases=['bold']), command=Command(self._update_user))
-        self.__prompt_5 = Prompt(textformat.apply("Password", emphases=['bold']), command=Command(self._update_password))
+        self.__prompt_1 = Prompt(textformat.apply("Host Name", emphases=['bold']), 
+                                 command=Command(self._update_host))
+        self.__prompt_2 = Prompt(textformat.apply("Database Name", emphases=['bold']), 
+                                 command=Command(self._update_database))
+        self.__prompt_3 = Prompt(textformat.apply("Port Number", emphases=['bold']), 
+                                 command=Command(self._update_port), verification=will_it_int)
+        self.__prompt_4 = Prompt(textformat.apply("Username", emphases=['bold']), 
+                                 command=Command(self._update_user))
+        self.__prompt_5 = Prompt(textformat.apply("Password", emphases=['bold']), 
+                                 command=Command(self._update_password))
         self.__prompt_6 = Prompt("Done Editing?")
         self.__prompt_7 = Prompt("Are you sure you want to delete this connection?")
 
@@ -221,7 +262,7 @@ class EditConnection(NodeBundle):
             }
 
         self.__prompt_6.options = {
-            '1': Command(self._save_changes, value='Save Changes', 
+            '1': Command(self._save_changes, value='Save Changes',
                          command=Command(lambda: self.__node_5.set_next(self.__exit_node))),
             '2': Command(lambda: self.__node_5.set_next(self.__exit_node), value='Discard Changes'),
             '3': Command(lambda: self.__node_5.set_next(self.__entry_node), value='Return to Editing')
@@ -268,6 +309,22 @@ class EstablishConnection(NodeBundle):
 
     def __init__(self, connection_adapter, selected_connection, selection_bundle=None, parent=None):
 
+        """
+        Display and shows a successful or a failed connection and allows user for more than one 
+        attempts to establish database connection
+
+        Parameters
+        ----------
+        connection_adapter : database.PostgreSQL or any connection adapter
+            the controller of this bundle
+        
+        selected_connection : list
+            may refer to the list in SelectConnection bundle
+
+        selection_bundle : SelectConnection
+            any bundle that selects a connection
+        """
+
         name = 'establish-connection'
         self.connection_adapter = connection_adapter
 
@@ -281,9 +338,11 @@ class EstablishConnection(NodeBundle):
         # NODES
         self.__entry_node = Node(self.__display_0, name=f'{name}_connecting-msg',
                                  show_hideout=True, store=False)
+
         self.__node_0 = Node(self.__command_0, name=f'{name}_connecting', parent=self.__entry_node, 
-                                     acknowledge=True, store=False)
+                             acknowledge=True, store=False)
         self.__node_1 = Node(self.__prompt_0, name=f'{name}_failed', parent=self.__node_0)
+
         self.__exit_node = DecoyNode(f'{name}_last-node', parent=self.__node_0)
 
         self.__node_1.adopt(self.__entry_node)
@@ -297,13 +356,16 @@ class EstablishConnection(NodeBundle):
         self.__display_0.exe_seq = 'before'
         self.__command_0.exe_seq = 'before'
 
+        # adds another option for returning to selection
         if selection_bundle:
             self.__node_1.adopt(selection_bundle.entry_node)
-            self.__prompt_0.options['R'] = Command(lambda: self.__node_1.set_next(selection_bundle.entry_node), value="Return to selection.")
+            self.__prompt_0.options['R'] = Command(lambda: self.__node_1.set_next(selection_bundle.entry_node), 
+                                                   value="Return to selection.")
             
         super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
 
     def _execute(self, selected_connection):
+
         connection_info = next(iter(selected_connection))
         self.connection_adapter.connection_info = connection_info
 
@@ -317,14 +379,28 @@ class EstablishConnection(NodeBundle):
             return textformat.apply(f"ERROR: {message}", emphases=['italic'], text_color='red')
 
     def _format_message(self, selected_connection):
+
         connection_info = next(iter(selected_connection))
         self.__display_0.format_dict = {'host': connection_info.host, 
-                                    'database': connection_info.database}
+                                        'database': connection_info.database}
 
 
 class QueryExecution(NodeBundle):
 
-    def __init__(self, query_tool, query_bundle=None, parent=None):
+    def __init__(self, query_tool, query_edit_bundle=None, parent=None):
+
+        """
+        Displays and show the user the process and results of executing query,
+        allows for more than one attempts to execute a query
+
+        Parameters
+        ----------
+        query_tool : database.QueryTool
+            the controller of this bundle
+
+        query_edit_bundle : (any bundle that edits a query)
+            Refer to classes in vsdb.queries_cli
+        """
 
         name = 'query-execution'
         self.query_tool = query_tool
@@ -334,9 +410,11 @@ class QueryExecution(NodeBundle):
         self.__prompt_0 = Prompt("Failed to run query. What do you want to do?")
         
         self.__entry_node = Node(self.__display_0, name=f'{name}_executing', 
-                                     show_hideout=True)
+                                 show_hideout=True)
+
         self.__node_0 = Node(self.__display_1, name=f'{name}_query-results', parent=self.__entry_node)
         self.__node_1 = Node(self.__prompt_0, name=f'{name}_query-failed', parent=self.__entry_node)
+
         self.__exit_node = DecoyNode(name=f'{name}_last', parent=self.__node_0)
         
         self.__prompt_0.options = {
@@ -346,9 +424,11 @@ class QueryExecution(NodeBundle):
         
         self.__node_1.adopt(self.__entry_node)
 
-        if query_bundle:
-            self.__node_1.adopt(query_bundle.entry_node)
-            self.__prompt_0.options['R'] = Command(lambda: self.__node_1.set_next(query_bundle.entry_node), value='Return to Query Edit')
+        # adds another option for returning to editing the query params
+        if query_edit_bundle:
+            self.__node_1.adopt(query_edit_bundle.entry_node)
+            self.__prompt_0.options['R'] = Command(lambda: self.__node_1.set_next(query_edit_bundle.entry_node), 
+                                                   value='Return to Query Edit')
 
 
         super().__init__(self.__entry_node, self.__exit_node, name=name, parent=parent)
@@ -368,6 +448,15 @@ class QueryExecution(NodeBundle):
 class ExportQueryResults(pandas_functions_cli.ExportSpreadsheet):
 
     def __init__(self, query_tool, parent=None):
+        
+        """
+        Asks user where to save the query results
+
+        Parameters
+        ----------
+        query_tool : database.QueryTool
+            the controller of this bundle
+        """
 
         name = 'export-query-results'
         self.query_tool = query_tool

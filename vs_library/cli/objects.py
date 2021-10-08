@@ -78,8 +78,8 @@ class Command(CliObject):
 
         if self.method:
             self.__message = self.method()
-
-            if self.respond and not self.exe_seq:    
+            
+            if self.respond and not self.exe_seq:
                 self.draw()
 
         # useful for creating a chained Command
