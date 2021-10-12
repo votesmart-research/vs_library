@@ -23,7 +23,7 @@ class ImportSpreadsheet(NodeBundle):
         
         # NODES
         self.__entry_node = Node(self.__display_0, name=f'{name}_file-dialog', 
-                             show_instructions=True)
+                             show_hideout=True)
 
         self.__node_0 = Node(self.__command_0, name=f'{name}_read-file', parent=self.__entry_node, 
                              store=False)
@@ -101,7 +101,7 @@ class ExportSpreadsheet(NodeBundle):
 
         # NODES
         self.__entry_node = Node(self.__display_0, name=f'{name}_file-dialog',
-                             clear_screen=True, show_instructions=True)
+                             clear_screen=True, show_hideout=True)
         self.__node_0 = Node(self.__command_0, name=f'{name}_export-file', parent=self.__entry_node,
                              acknowledge=True, store=False)
         self.__node_1 = Node(self.__prompt_1, name=f'{name}_error', parent=self.__node_0,

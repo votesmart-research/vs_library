@@ -46,19 +46,19 @@ class IncumbentQueryForm(NodeBundle):
         self.__entry_node = Node(self.__display_0, name=f'{name}_section-header',
                              store=False, clear_screen=True)
         self.__node_0 = Node(self.__prompt_0, name=f'{name}_office-choice', parent=self.__entry_node,
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_1 = Node(self.__prompt_1, name=f'{name}_office-id', parent=self.__node_0, 
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_2 = Node(self.__prompt_2, name=f'{name}_office-types', parent=self.__node_0, 
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_3 = Node(self.__prompt_3, name=f'{name}_year', parent=self.__node_1, 
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_4 = Node(self.__prompt_4, name=f'{name}_states', parent=self.__node_3, 
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_5 = Node(self.__table_0, name=f'{name}_responses', parent=self.__node_4,
                              store=False)
         self.__node_6 = Node(self.__prompt_5, name=f'{name}_confirm', parent=self.__node_5, 
-                             show_instructions=True, store=False)
+                             show_hideout=True, store=False)
         self.__exit_node = DecoyNode(name=f'{name}_last-node', parent=self.__node_6)
 
         self.__node_2.adopt(self.__node_3)
@@ -134,19 +134,19 @@ class CandidateQueryForm(NodeBundle):
         self.__entry_node = Node(self.__display_0, name=f'{name}_section-header',
                              store=False, clear_screen=True)
         self.__node_0 = Node(self.__prompt_0, name=f'{name}_election-stage', parent=self.__entry_node,
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_1 = Node(self.__prompt_1, name=f'{name}_office-choice', parent=self.__node_0, 
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_2 = Node(self.__prompt_2, name=f'{name}_office-id', parent=self.__node_1, 
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_3 = Node(self.__prompt_3, name=f'{name}_office-types', parent=self.__node_1, 
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_4 = Node(self.__prompt_4, name=f'{name}_year', parent=self.__node_2, 
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_5 = Node(self.__prompt_5, name=f'{name}_state', parent=self.__node_4, 
-                             show_instructions=True)
+                             show_hideout=True)
         self.__node_6 = Node(self.__table_0, name=f'{name}_response', parent=self.__node_5,
-                             show_instructions=True, store=False)
+                             show_hideout=True, store=False)
         self.__node_7 = Node(self.__prompt_6, name=f'{name}_confirm', parent=self.__node_6, 
                              store=False)
         self.__exit_node = DecoyNode(name=f'{name}_last-node', parent=self.__node_7)

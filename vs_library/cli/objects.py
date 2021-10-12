@@ -12,10 +12,25 @@ from tabulate import tabulate
 
 class CliObject(ABC):
     
-    """A blueprint of a command line interface object (CliObject). CliObject allows for a user interaction on a command line. 
-       It can be traversed when paired with CliNode"""
+    """
+    A blueprint of a command line interface object (CliObject)
+
+    CliObjects is to provide user interaction with the application on the command line
+    
+    Attributes
+    ----------
+    name : string
+        Name associated with the type of object
+
+    command : Command
+        A Command object that is used in the execute() method
+
+    exe_seq : 'before' or 'after'
+        To denote whether an object executes before or after being drawn
+    """
 
     def __init__(self, name, command, exe_seq):
+
         self.name = name
         self.command = command
         self.exe_seq = exe_seq
@@ -35,6 +50,19 @@ class Command(CliObject):
 
     def __init__(self, method=None, value='', respond=False, command=None):
 
+        """
+        Parameters
+        ----------
+        method : function
+            Can be any python functions and can return a message
+
+        value : string
+            A string representation of object when printed to terminal
+
+        respond : bool
+            If True, the return message from method will be drawn
+        """
+
         super().__init__(name='command', command=command, exe_seq=None)
 
         self.method = method
@@ -47,18 +75,16 @@ class Command(CliObject):
             print(self.__message)
 
     def execute(self):
-        results = None
 
         if self.method:
             self.__message = self.method()
-
-            if self.respond and not self.exe_seq:    
+            
+            if self.respond and not self.exe_seq:
                 self.draw()
 
+        # useful for creating a chained Command
         if isinstance(self.command, Command):
             self.command.execute()
-
-        return results
 
     def __str__(self):
         return self.value
@@ -66,9 +92,25 @@ class Command(CliObject):
 
 class Display(CliObject):
 
-    """The Display class is a CliObject that diplays messages on the command line."""
+    """
+    The Display class is a CliObject that diplays messages on the command line.
+    
+    Attributes
+    ----------
+    format_dict : dict
+        A dictionary containing parameters to format a string variable utilizing
+        the string.format() method
+    """
 
     def __init__(self, message, command=None):
+        
+        """
+        Parameters
+        ----------
+        message : string
+            A string to be printed on the terminal when object is drawn
+        """
+
         super().__init__(name='display', command=command, exe_seq='after')
 
         self.message = message
@@ -87,9 +129,38 @@ class Display(CliObject):
 
 class Prompt(CliObject):
 
-    """The Prompt class is a CliObject that allows user inputs in response to a prompt."""
+    """
+    The Prompt class is a CliObject that allows user inputs in response to a prompt.
+    
+    Attributes
+    ----------
+    responses : array
+        May contain more than one response if multiple_selection is True,
+        returns a string if multiple_selection is False
+    
+    error_msg : string
+        A statement to inform user that input is invalid
+    """
 
     def __init__(self, question, options=None, verification=None, multiple_selection=False, command=None):
+
+        """
+        Parameters
+        ----------
+        question : string
+            A statement in a form of a question, used for prompting
+        
+        options : dict
+            Keys of dict are the options that the user selects
+            while values are the description
+
+        verification : function
+            Function that returns a boolean and optionally an error message along it
+            (the return value of the function must be a boolean FIRST then error message)
+
+        multiple_selection : bool
+            if True, the user can select multiple options separated by comma
+        """
 
         super().__init__(name='prompt', command=command, exe_seq='after')
 
@@ -100,7 +171,7 @@ class Prompt(CliObject):
 
         self.__responses = []
         self.__error_msg = textformat.apply("Your input(s) are not recognizable, please try again.", 
-                                                 emphases=['italic'], text_color='red')
+                                            emphases=['italic'], text_color='red')
 
     @property
     def question(self):
@@ -115,6 +186,21 @@ class Prompt(CliObject):
         return self.__responses if self.multiple_selection else next(iter(self.__responses))
     
     def option_responses(self, string=False):
+
+        """
+        Returns the option values of the user response
+        
+        Parameters
+        ---------
+        string : bool
+            If True, will return a string otherwise an array
+        
+        Returns
+        -------
+        string or array
+            String concatenation of an array object or an array of responses
+        """
+
         response = []
 
         for r in self.__responses:
@@ -129,13 +215,28 @@ class Prompt(CliObject):
 
     def _verify(self):
 
+        """
+        Verifies the user reponse
+
+        User will only be allowed to give response according to the options given.
+        If no options are given, user response will be verified via a function call, 
+        limiting only to responses that met the criteria of the function
+        
+        Returns
+        -------
+        boolean
+            True if the verification passes
+        """
+
+        # the presence of verification will take precedence over verifying against option given
         if self.verification:
             verified = []
             error_messages = []
 
             for response in self.__responses:
                 result = self.verification(response)
-
+                
+                # some returns from verification function can be a boolean and a string
                 if isinstance(result, tuple) and len(result) > 1 :
                     verified.append(result[0])
                     error_messages.append(result[1])
@@ -144,11 +245,10 @@ class Prompt(CliObject):
 
             if error_messages:
                 self.__error_msg = '\n'.join(map(lambda s: textformat.apply(s, emphases=['italic'], text_color='red'), 
-                                                 error_messages
-                                                 )
-                                            )
+                                                 error_messages))
             return all(verified)
 
+        # verifying against option will only take place if no verification is given
         elif not self.verification and self.options:
             return all(r.strip() in self.options.keys() for r in self.__responses)
 
@@ -157,13 +257,17 @@ class Prompt(CliObject):
 
     def draw(self):
 
+        # to receive a response
         def _single(self):
             self.question.draw()
-            self.__responses = [input(f"{str(self)}>> ")]
+            self.__responses = [input(f"{str(self)}: ")]
 
+        # to receive multiple responses
         def _multiple(self):
             self.question.draw()
-            self.__responses = input(f"{str(self)}>> ").split(',')
+            self.__responses = input(f"{str(self)}: ").split(',')
+
+            # ** is a unique option that allows user to select all of the option
             if '**' in self.options.keys() and self.__responses == ['**']:
                 self.__responses = [o for o in self.options.keys() if o!='**']
         
@@ -174,13 +278,14 @@ class Prompt(CliObject):
 
         while not self._verify():
             print(f"{self.__error_msg}\n")
-            time.sleep(0.75)
+            time.sleep(0.75) # to provide user acknowledgement if something went wrong
 
             if self.multiple_selection:
                 _multiple(self)
             else:
                 _single(self)
 
+        # executes the selected option if it is a Command
         if self.options:
             for r in set(self.__responses):
                 cleaned_r = r.strip()
@@ -192,12 +297,24 @@ class Prompt(CliObject):
             self.command.execute()
 
     def clear(self):
+
+        """Clears all user responses"""
+
         if self.__responses:
             self.__responses.clear()
 
     def __str__(self):
+
+        """Returns a formatted string such as:
+        
+            [1]  Select Me
+            [2]  No, select me
+
+        """
+
         if self.multiple_selection:
-            options_msg = textformat.apply("Please enter one or more of the options above separated by a comma", emphases=['italic'])
+            options_msg = textformat.apply("Please enter one or more of the options above separated by a comma", 
+                                           emphases=['italic'])
         else:
             options_msg = textformat.apply("Please enter one of the options above", emphases=['italic'])
             
@@ -208,9 +325,36 @@ class Prompt(CliObject):
 
 class Table(CliObject):
 
-    """The Table class is a CliObject that display information in a tabular format on the command line."""
+    """
+    The Table class is a CliObject that display information in a tabular format on the command line.
+    
+    This is dependent on 'tabulate' python package see here:
+    https://pypi.org/project/tabulate/
+
+    Attributes
+    ----------
+    table_header : string
+        Bolded and centered at the top of the table
+
+    description : string
+        Italicize and left justify at the bottom of the table to provide 
+        a description of the table
+    """
 
     def __init__(self, table, header=True, command=None):
+
+        """
+        Parameters
+        ----------
+        table : 2D-array
+            Each array in the array will be each row of the table
+
+        header : bool
+            If true, the table emphasize the first row as header
+        
+        command : Command
+            A Command object that can be executed before or after it is drawn
+        """
         super().__init__(name='table', command=command, exe_seq='before')
 
         self.table = table
@@ -218,6 +362,12 @@ class Table(CliObject):
         
         self.table_header = ""
         self.description = ""
+
+    def clear(self):
+        if self.header:
+            del self.table[1:]
+        else:
+            self.table.clear()
 
     def draw(self):
         table_str = str(self)
@@ -238,6 +388,9 @@ class Table(CliObject):
             self.command.execute()
 
     def __str__(self):
+
+        """Returns a tabulated string"""
+
         if self.header:
             return tabulate(self.table, headers='firstrow', tablefmt='grid')
         else:

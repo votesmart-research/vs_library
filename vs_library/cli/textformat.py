@@ -1,5 +1,8 @@
 
 class TextEmphasis:
+
+    """Directory of sequences that adds emphasis to text when printed on a CLI"""
+
     END = '\033[0m'
     BOLD = '\033[1m'
     GREYED_OUT = '\033[2m'
@@ -11,6 +14,9 @@ class TextEmphasis:
 
 
 class TextColor:
+
+    """Directory of sequences that changes the color of text when printed on a CLI"""
+
     BLACK = '\033[30m'
     RED = '\033[31m'
     GREEN = '\033[32m'
@@ -30,6 +36,9 @@ class TextColor:
 
 
 class BackgoundColor:
+
+    """Directory of sequences that adds highlight to text when printed on a CLI"""
+
     BLACK = '\033[40m'
     RED = '\033[41m'
     GREEN = '\033[42m'
@@ -47,17 +56,36 @@ class BackgoundColor:
     BRIGHT_CYAN = '\033[106m'
     WHITE = '\033[107m'
 
-
+# Gets the name of each attribute from the classes above
 _TEXT_EMPHASIS_PALETTE = [attr for attr in dir(TextEmphasis) if not attr.startswith('__')]
 _TEXT_COLOR_PALETTE = [attr for attr in dir(TextColor) if not attr.startswith('__')]
 _BACKGROUND_COLOR_PALETTE = [attr for attr in dir(BackgoundColor) if not attr.startswith('__')]
 
 
 def apply(raw_text, emphases=[None], text_color=None, bg_color=None):
-    """Applies the listed palette by appending them to the raw text, thus formatting them on the command line interface."""
+
+    """
+    Applies the listed palette by appending them to the raw text.
+
+    Initial application of text or background color attributes cannot be overwritten or 'mixed'
+    
+    Parameters
+    ----------
+    raw_text: string
+    
+    emphases: array
+        can have more than one attribute found in the 'TextEmphasis' class
+    
+    text_color: string
+        can have one attribute found in 'TextColor' class
+    
+    bg_color: string
+        can have one attribute found in 'BackgroundColor' class
+    """
     
     formatted = raw_text
     
+    # a function to add sequences to text
     def cast(seq):
         nonlocal formatted
         if seq not in formatted:

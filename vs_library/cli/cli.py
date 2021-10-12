@@ -5,28 +5,29 @@ import os
 import time
 
 # internal packages
-from . import objects, textformat
+from . import textformat
+from .objects import Prompt, Command
 
 
 class Engine:
 
-    """Runs, stores and remember nodes of CliObjects.
+    """
+    Runs, stores and remember nodes of CliObjects.
     
     Attributes
     ----------
-    current_node: Node
-        The current selection of a node by user selection
+    current_node : Node
+        The current selection of a node by the user
 
-    node_selection: array    
+    node_selection : array    
         Stores node selection and remembers the node selected
     
-    hideout_menu: Prompt CliObject
+    hideout_menu : CliObject, Prompt
         A menu that presents the options for the user to traverse back to a node, 
         restart the application or quit the application
     
-    restart_menu: Prompt CliObject
+    restart_menu : CliObject, Prompt
         A menu that presents the options for the user to restart or quit the application
-
     """
 
     def __init__(self, start_node, loop=False):
@@ -34,8 +35,12 @@ class Engine:
         """
         Parameters
         ----------
-        start_node: Node
-        
+        start_node : Node
+            Starting node of the engine that contains other child nodes
+
+        loop : bool
+            If True, the engine will restart to the first node clearing all selected nodes 
+            else the while loop breaks and exits the applciation
         """
 
         self.__current_node = start_node
@@ -44,22 +49,21 @@ class Engine:
         # will trigger restart menu if set to True
         self.loop = loop
 
-        self.hideout_menu = objects.Prompt(textformat.apply("Hideout Menu", emphases=['bold'], text_color='cyan'))
+        self.hideout_menu = Prompt(textformat.apply("Hideout Menu", emphases=['bold'], text_color='cyan'))
         self.hideout_menu.options = {
             '1': "Return",
-            '2': objects.Command(self.go_back, value="Go back", respond=True,
-                                 command=objects.Command(lambda: time.sleep(0.3))),
-            'R': objects.Command(self.restart, value="Restart", respond=True,
-                                 command=objects.Command(lambda: time.sleep(0.3))),
-            'Q': objects.Command(self.quit, value="Quit")
+            '2': Command(self.go_back, value="Go back", respond=True,
+                                 command=Command(lambda: time.sleep(0.3))),
+            'R': Command(self.restart, value="Restart", respond=True,
+                                 command=Command(lambda: time.sleep(0.3))),
+            'Q': Command(self.quit, value="Quit")
             }
 
-        self.restart_menu = objects.Prompt("You have reached the end, what would you like to do?")
+        self.restart_menu = Prompt("You have reached the end, what would you like to do?")
         self.restart_menu.options = {
-            '1': objects.Command(self.restart, value="Restart", respond=True,
-                                 command=objects.Command(lambda: time.sleep(0.3))),
-            '2': objects.Command(self.quit, value="Quit")}
-
+            '1': Command(self.restart, value="Restart", respond=True,
+                                 command=Command(lambda: time.sleep(0.3))),
+            '2': Command(self.quit, value="Quit")}
 
     def clear_terminal(self):
 
@@ -70,10 +74,9 @@ class Engine:
         else:
             os.system('clear')
 
-
     def go_back(self):
 
-        """Returns to the previous node."""
+        """Set the current node to the previous node"""
 
         self.__current_node = self.__node_selection[-1]
         if len(self.__node_selection) > 1: 
@@ -81,10 +84,9 @@ class Engine:
 
         return textformat.apply("Going Back...", emphases=['italic'], text_color='magenta')
 
-
     def restart(self):
 
-        """Returns to the first node and clears all node selection."""
+        """Set the current node to the first node and clears all selection."""
 
         self.__current_node = self.__node_selection[0]
         self.__node_selection.clear()
@@ -101,11 +103,9 @@ class Engine:
         self.clear_terminal()
         sys.exit()
 
-
     def run(self):
         
-        """Traversed through all the nodes by setting to their next intended child while also executing each individual 
-        nodes themselves"""
+        """Traverses and executes nodes while triggering events pertaining to each node attributes"""
 
         while True:
 
@@ -116,25 +116,17 @@ class Engine:
                 if self.__current_node.clear_screen:
                     self.clear_terminal()
 
-                if self.__current_node.show_instructions:
+                if self.__current_node.show_hideout:
                     print(textformat.apply("To open hideout menu, press Ctrl + C\n", emphases=['italic'], text_color='cyan'))
 
                 # CTRL + C will trigger the hideout menu
                 try:
-                    if self.__current_node.object.exe_seq == 'before':
-                        self.__current_node.object.execute()
-                        self.__current_node.object.draw()
-                    elif self.__current_node.object.exe_seq == 'after':
-                        self.__current_node.object.draw()
-                        self.__current_node.object.execute()
-                    # since not all current node has a command to execute, it will default to draw only
-                    else:
-                        self.__current_node.object.draw()
+                    self.__current_node.execute()
 
                     if self.__current_node.acknowledge:
                         _ = input(textformat.apply("\nPress ENTER to continue.", emphases=['blink'], text_color='magenta'))
 
-                    # automatically set next of  to the only child
+                    # automatically set next node to the only child
                     if len(self.__current_node.children) == 1:
                         self.__current_node.set_next(next(iter(self.__current_node.children.values())))
                     
@@ -144,11 +136,9 @@ class Engine:
                     self.__current_node = self.__current_node.next
 
                 except KeyboardInterrupt:
-                    print()
                     # Loop to prevent user from further triggering another KeyboardInterrupt
                     while True:
                         try:
-                            print()
                             self.clear_terminal()
                             self.hideout_menu.draw()
                             break
@@ -156,7 +146,7 @@ class Engine:
                             pass
             else:
                 if self.loop:
-                    print()
+                    self.clear_terminal()
                     self.restart_menu.draw()
                 else:
                     break
@@ -166,23 +156,64 @@ class Engine:
 
 class Node:
 
-    """An encapsulation of CliObjects, to allow for traversing between objects."""
+    """
+    To encapsulate and traverse CliObjects via Engine
+    
+    Attributes
+    ----------
+    id : int
+        Unique id is given to each node during runtime
 
-    def __init__(self, object, parent=None, name='node', show_instructions=False, clear_screen=False, 
-                 acknowledge=False, store=True):
+    next : Node
+        Child node that is set to be traverse next
+    
+    children : dict
+        Contains child nodes where each child node is identified with their id
+    
+    engine : Engine
+        A 'backdoor' for node-to-engine interaction
+    """
 
-        self.object = object
-        self.__id = id(self)
-        self.__name = object.name + '_' + name
+    def __init__(self, cliobject, parent=None, name='node', 
+                 show_hideout=False, clear_screen=False, acknowledge=False, store=True):
+        """
+        Parameters
+        ----------
+        cliobject : CliObject
+            Can hold a cliobject
+
+        parent : Node
+            Parent node that adopts this instance
+
+        name : string
+            Name for human-readable identification
+        
+        show_hideout : bool
+            If True, will inform/remind user of using hideout menu feature
+    
+        clear_screen : bool
+            If True, terminal will be cleared before drawing or executing the object
+    
+        acknowledge : bool
+            If True, engine will prompt user to acknowledge a node with an input
+
+        store : bool
+            If True, engine will store it in node selections otherwise disregarded
+        """
+
+        self.cliobject = cliobject
+        self.__name = name
 
         self.__next = None
         self.__children = {}
         self.__engine = None
 
-        self.show_instructions = show_instructions
+        self.show_hideout = show_hideout
         self.clear_screen = clear_screen
         self.acknowledge = acknowledge
         self.store = store
+
+        self.__id = id(self)
 
         if parent:
             parent.adopt(self)
@@ -194,16 +225,28 @@ class Node:
         assert isinstance(node, Node)
         self.__children[node.id] = node
 
-
     def set_next(self, node):
 
-        """Selects the next node from existing node children during runtime"""
+        """Selects the next node from existing node children"""
 
         try:
             self.__next = self.__children[node.id] if node else None
 
         except KeyError:
-            raise Exception(f"NODE={node.name} is not adopted by NODE={self.__name}")
+            raise Exception(f"NODE={node.name} is not adopted by NODE={self.name}")
+
+    def execute(self):
+        
+        """Draw and/or executes the CliObject that the node holds"""
+
+        if self.cliobject.exe_seq == 'before':
+            self.cliobject.execute()
+            self.cliobject.draw()
+        elif self.cliobject.exe_seq == 'after':
+            self.cliobject.draw()
+            self.cliobject.execute()
+        else:
+            self.cliobject.draw()
 
     @property
     def id(self):
@@ -211,11 +254,12 @@ class Node:
     
     @property
     def name(self):
-        return self.__name
+        # returns the cliobject name for better identificaiton
+        return self.cliobject.name + self.__name
     
     @name.setter
     def name(self, name):
-        self.__name = self.object.name + '_' + name
+        self.__name = name
 
     @property
     def children(self):
@@ -244,17 +288,36 @@ class Node:
             self.__engine.go_back()
         elif method == 'restart':
             self.__engine.restart()
+        elif method == 'clear_terminal':
+            self.__engine.clear_terminal()
         else:
             return
 
 
 class NodeBundle:
 
-    """Can contain a group (bundle) of LinkNodes."""
+    """To contain a group of Nodes such that each bundle can perform a specific task"""
 
-    def __init__(self, entry_node, exit_node, parent=None, name='node'):
+    def __init__(self, entry_node, exit_node, parent=None, name='bundle'):
 
-        self.__name = 'bundle' + '_' + name
+        """
+        Parameters
+        ----------    
+        entry_node : Node
+            Node of a bundle where other nodes or bundle can gain access to
+
+        exit_node : Node
+            Node of a bundle where it adopts other nodes or bundle
+
+        parent : Node or NodeBundle
+            Node as parent will adopt the entry_node. NodeBundle as parent will have 
+            exit_node of parent to adopt entry_node
+
+        name : string
+            Name for human-readable identification
+        """
+
+        self.__name = name
         self.__entry_node = entry_node
         self.__exit_node = exit_node
 
@@ -271,18 +334,18 @@ class NodeBundle:
         self.__exit_node.adopt(node)
     
     def set_next(self, bundle):
-        self.set_next(bundle.entry_node)
+        self.set_next_node(bundle.entry_node)
     
     def set_next_node(self, node):
         self.__exit_node.set_next(node)
     
     @property
     def name(self):
-        return self.__name
+        return self.__name + '_node-bundle'
 
     @name.setter
     def name(self, name):
-        self.__name = 'bundle' + '_' + name
+        self.__name = name
 
     @property
     def entry_node(self):
@@ -298,6 +361,7 @@ class DecoyNode(Node):
     """The DecoyNode is an extension of Node that acts as a placeholder"""
 
     def __init__(self, name='decoy-node', parent=None):
-        _object = objects.Command()
+        # CliObject Command is used to replace the need of declaring another object
+        _object = Command()
         _object.name = 'decoy'
-        super().__init__(_object, parent=parent, name=name, show_instructions=False, store=False)
+        super().__init__(_object, parent=parent, name=name, show_hideout=False, store=False)
