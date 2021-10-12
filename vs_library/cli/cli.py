@@ -16,17 +16,17 @@ class Engine:
     
     Attributes
     ----------
-    current_node: Node
+    current_node : Node
         The current selection of a node by the user
 
-    node_selection: array    
+    node_selection : array    
         Stores node selection and remembers the node selected
     
-    hideout_menu: CliObject, Prompt
+    hideout_menu : CliObject, Prompt
         A menu that presents the options for the user to traverse back to a node, 
         restart the application or quit the application
     
-    restart_menu: CliObject, Prompt
+    restart_menu : CliObject, Prompt
         A menu that presents the options for the user to restart or quit the application
     """
 
@@ -35,10 +35,10 @@ class Engine:
         """
         Parameters
         ----------
-        start_node: Node
+        start_node : Node
             Starting node of the engine that contains other child nodes
 
-        loop: bool
+        loop : bool
             If True, the engine will restart to the first node clearing all selected nodes 
             else the while loop breaks and exits the applciation
         """
@@ -161,16 +161,16 @@ class Node:
     
     Attributes
     ----------
-    id: int
+    id : int
         Unique id is given to each node during runtime
 
-    next: Node
+    next : Node
         Child node that is set to be traverse next
     
-    children: dict
+    children : dict
         Contains child nodes where each child node is identified with their id
     
-    engine: Engine
+    engine : Engine
         A 'backdoor' for node-to-engine interaction
     """
 
@@ -179,25 +179,25 @@ class Node:
         """
         Parameters
         ----------
-        cliobject: CliObject
+        cliobject : CliObject
             Can hold a cliobject
 
-        parent: Node
+        parent : Node
             Parent node that adopts this instance
 
-        name: string
+        name : string
             Name for human-readable identification
         
-        show_hideout: bool
+        show_hideout : bool
             If True, will inform/remind user of using hideout menu feature
     
-        clear_screen: bool
+        clear_screen : bool
             If True, terminal will be cleared before drawing or executing the object
     
-        acknowledge: bool
+        acknowledge : bool
             If True, engine will prompt user to acknowledge a node with an input
 
-        store: bool
+        store : bool
             If True, engine will store it in node selections otherwise disregarded
         """
 
@@ -303,17 +303,17 @@ class NodeBundle:
         """
         Parameters
         ----------    
-        entry_node: Node
+        entry_node : Node
             Node of a bundle where other nodes or bundle can gain access to
 
-        exit_node: Node
+        exit_node : Node
             Node of a bundle where it adopts other nodes or bundle
 
-        parent: Node or NodeBundle
+        parent : Node or NodeBundle
             Node as parent will adopt the entry_node. NodeBundle as parent will have 
             exit_node of parent to adopt entry_node
 
-        name: string
+        name : string
             Name for human-readable identification
         """
 

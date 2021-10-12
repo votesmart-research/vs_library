@@ -1,6 +1,5 @@
 
 # internal packages
-import re
 from . import database
 from ..tools import pandas_functions_cli
 from ..cli import Node, NodeBundle, DecoyNode, textformat
@@ -93,7 +92,8 @@ class AddConnection(NodeBundle):
         return textformat.apply(msg, emphases=['italic'], text_color='green')
 
     def clear_all(self):
-        # must clear results to prevent from uninteded edits
+
+        # must clear results to prevent from unintended edits
         self.__prompt_0.clear()
         self.__prompt_1.clear()
         self.__prompt_2.clear()
@@ -115,7 +115,7 @@ class SelectConnection(NodeBundle):
     def __init__(self, connection_manager, parent=None):
 
         """
-        Prompts user to select a connection from a table of stored connection
+        Allows users to choose from a list of stored connections
 
         Parameters
         ----------
@@ -130,7 +130,7 @@ class SelectConnection(NodeBundle):
         self.__selected_connection = []
 
         # OBJECTS
-        self.__table_0 = Table([[]], header=True, 
+        self.__table_0 = Table([['connection_id','host', 'database', 'port', 'user']], header=True, 
                                command=Command(self._populate_table))
 
         self.__prompt_0 = Prompt("Select a connection by connection_id", 
@@ -173,11 +173,12 @@ class SelectConnection(NodeBundle):
     def _populate_table(self):
         connections, msg = self.connection_manager.read()
 
-        self.__table_0.table = [['connection_id','host', 'database', 'port', 'user']]
+        self.__table_0.clear()
         self.__table_0.description = msg
 
         for connection in connections:
-            self.__table_0.table.append([connection.connection_id, connection.host, connection.database, connection.port, connection.user])
+            self.__table_0.table.append([connection.connection_id, connection.host, connection.database, 
+                                         connection.port, connection.user])
 
     @property
     def selected_connection(self):
@@ -189,14 +190,14 @@ class EditConnection(NodeBundle):
     def __init__(self, connection_manager, selected_connection, parent=None):
 
         """
-        Edit and update an existing connection
+        Allows user to update and delete a stored connection
 
         Parameters
         ----------
         connection_manager : database.ConnectionManager
             the controller of this bundle
 
-        selected_connection: list
+        selected_connection : list
             may refer to the list in SelectConnection bundle
         """
         
@@ -234,7 +235,7 @@ class EditConnection(NodeBundle):
                              store=False)
         self.__node_4 = Node(self.__prompt_5, name=f'{name}_password', parent=self.__entry_node, 
                              store=False)
-        self.__node_5 = Node(self.__prompt_6, name=f'{name}_confirm', parent=self.__entry_node, 
+        self.__node_5 = Node(self.__prompt_6, name=f'{name}_confirm', 
                              store=False)
         self.__node_6 = Node(self.__prompt_7, name=f'{name}_delete', parent=self.__entry_node)
 
@@ -310,8 +311,7 @@ class EstablishConnection(NodeBundle):
     def __init__(self, connection_adapter, selected_connection, selection_bundle=None, parent=None):
 
         """
-        Display and shows a successful or a failed connection and allows user for more than one 
-        attempts to establish database connection
+        Informs the user whether connection is established successfully and allow for retries
 
         Parameters
         ----------
@@ -330,7 +330,7 @@ class EstablishConnection(NodeBundle):
 
         # OBJECTS
         self.__display_0 = Display("Connecting to \'{database}\' on \'{host}\'...", 
-                                                command=Command(lambda: self._format_message(selected_connection)))
+                                   command=Command(lambda: self._format_message(selected_connection)))
 
         self.__command_0 = Command(lambda: self._execute(selected_connection))
         self.__prompt_0 = Prompt("Connection to database failed. What would you like to do?")
@@ -376,7 +376,7 @@ class EstablishConnection(NodeBundle):
             return textformat.apply(message, emphases=['italic'], text_color='green')
         else:
             self.__node_0.set_next(self.__node_1)
-            return textformat.apply(f"ERROR: {message}", emphases=['italic'], text_color='red')
+            return textformat.apply(message, emphases=['italic'], text_color='red')
 
     def _format_message(self, selected_connection):
 
@@ -390,8 +390,7 @@ class QueryExecution(NodeBundle):
     def __init__(self, query_tool, query_edit_bundle=None, parent=None):
 
         """
-        Displays and show the user the process and results of executing query,
-        allows for more than one attempts to execute a query
+        Informs user of the querying process and allows for retries
 
         Parameters
         ----------
@@ -442,7 +441,7 @@ class QueryExecution(NodeBundle):
             return textformat.apply(message, emphases=['italic'], text_color='green')
         else:
             self.__entry_node.set_next(self.__node_1)
-            return textformat.apply(f"ERROR: {message}", emphases=['italic'], text_color='red')
+            return textformat.apply(message, emphases=['italic'], text_color='red')
 
 
 class ExportQueryResults(pandas_functions_cli.ExportSpreadsheet):
@@ -450,7 +449,7 @@ class ExportQueryResults(pandas_functions_cli.ExportSpreadsheet):
     def __init__(self, query_tool, parent=None):
         
         """
-        Asks user where to save the query results
+        Query results can be saved to a location on the user's local host
 
         Parameters
         ----------

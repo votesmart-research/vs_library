@@ -19,13 +19,13 @@ class CliObject(ABC):
     
     Attributes
     ----------
-    name: string
+    name : string
         Name associated with the type of object
 
-    command: Command
+    command : Command
         A Command object that is used in the execute() method
 
-    exe_seq: 'before' or 'after'
+    exe_seq : 'before' or 'after'
         To denote whether an object executes before or after being drawn
     """
 
@@ -53,13 +53,13 @@ class Command(CliObject):
         """
         Parameters
         ----------
-        method: function
+        method : function
             Can be any python functions and can return a message
 
-        value: string
+        value : string
             A string representation of object when printed to terminal
 
-        respond: bool
+        respond : bool
             If True, the return message from method will be drawn
         """
 
@@ -97,7 +97,7 @@ class Display(CliObject):
     
     Attributes
     ----------
-    format_dict: dict
+    format_dict : dict
         A dictionary containing parameters to format a string variable utilizing
         the string.format() method
     """
@@ -107,7 +107,7 @@ class Display(CliObject):
         """
         Parameters
         ----------
-        message: string
+        message : string
             A string to be printed on the terminal when object is drawn
         """
 
@@ -134,11 +134,11 @@ class Prompt(CliObject):
     
     Attributes
     ----------
-    responses: array
+    responses : array
         May contain more than one response if multiple_selection is True,
         returns a string if multiple_selection is False
     
-    error_msg: string
+    error_msg : string
         A statement to inform user that input is invalid
     """
 
@@ -192,7 +192,7 @@ class Prompt(CliObject):
         
         Parameters
         ---------
-        string: bool
+        string : bool
             If True, will return a string otherwise an array
         
         Returns
@@ -333,10 +333,10 @@ class Table(CliObject):
 
     Attributes
     ----------
-    table_header: string
+    table_header : string
         Bolded and centered at the top of the table
 
-    description: string
+    description : string
         Italicize and left justify at the bottom of the table to provide 
         a description of the table
     """
@@ -346,13 +346,13 @@ class Table(CliObject):
         """
         Parameters
         ----------
-        table: 2D-array
+        table : 2D-array
             Each array in the array will be each row of the table
 
-        header: bool
+        header : bool
             If true, the table emphasize the first row as header
         
-        command: Command
+        command : Command
             A Command object that can be executed before or after it is drawn
         """
         super().__init__(name='table', command=command, exe_seq='before')
@@ -362,6 +362,12 @@ class Table(CliObject):
         
         self.table_header = ""
         self.description = ""
+
+    def clear(self):
+        if self.header:
+            del self.table[1:]
+        else:
+            self.table.clear()
 
     def draw(self):
         table_str = str(self)

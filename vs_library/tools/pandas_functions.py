@@ -8,6 +8,19 @@ import numpy
 
 
 def read_spreadsheet(filepath):
+
+    """Reads a spreadsheet format file and converts it to pandas.DataFrame
+    
+    See more on pandas.DataFrame at:
+    https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
+    
+    Parameters
+    ----------
+    filepath : str
+        Path to spreadsheet file on user's computer to be imported
+    """
+
+
     _ , ext = os.path.splitext(filepath)
 
     try:
@@ -30,10 +43,26 @@ def read_spreadsheet(filepath):
         
         df = pandas.DataFrame()
 
-        return df, e
+        return df, f"ERROR: {str(e)}"
 
 
 def to_spreadsheet(df, filepath):
+
+    """
+    Converts a pandas.DataFrame into a spreadsheet file
+    
+    See more on pandas.DataFrame at:
+    https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
+
+    Parameters
+    ----------
+    df : pandas.DataFrame()
+        Not empty dataframe to be exported
+
+    filepath : str
+        Path on a user's computer where pandas.DataFrame() is to be exported
+    """
+
     _ , ext = os.path.splitext(filepath)
 
     try:
@@ -52,43 +81,70 @@ def to_spreadsheet(df, filepath):
         return True, f"File successfully exported to \'{os.path.abspath(filepath)}\'"
 
     except Exception as e:
-        return False, e
+        return False, f"ERROR: {str(e)}"
 
 
-def column_group_size(df, col):
-    return df.groupby(col).size()
-
-
-# returns a panda.Series object containing percentages of each column group
 def column_group_percentage(df, col):
-    return df.groupby(col).size().apply(lambda x: len(df))
+
+    """
+    Calculates the size percentage of a column group
+    
+    Returns
+    -------
+    pandas.Series
+
+    """
+
+    return df.groupby(col).size().apply(lambda x: x/len(df)*100)
 
 
-# returns a float value, uniqueness of the column
 def column_uniqueness(df, col):
-    return df[col].nunique() / len(df)
+
+    """
+    Calculates the ratio of unique elements to the length of pandas.DataFrame
+    of a specified column
+
+    Returns
+    -------
+    float
+    """
+
+    return df[col].nunique().apply(lambda x: x/len(df))
 
 
-# returns a panda.Series object containing adjusted uniqueness for selected columns
 def adjusted_column_uniqueness(df, selected_cols):
-    t = df[selected_cols].nunique() / len(df)
-    return t.apply(lambda x: x / t.sum())
+
+    """
+    Calculates the adjusted ratio of unique elements to length of pandas.DataFrame
+    based on selected columns
+    
+    Returns
+    -------
+    pandas.Series
+    """
+
+    u = df[selected_cols].nunique().apply(lambda x: x/len(df))
 
 
-# returns a string of the largest group in the column
-def column_largest_group(df, col):
-    return df.groupby(col).size().idxmax()
-
-
-# returns a string of the smallest group in the column
-def column_smallest_group(df, col):
-    return df.groupby(col).size().idxmin()
+    return u.apply(lambda x: x / u.sum())
 
 
 def get_column_dupes(df, column):
-    duplicate_candidates = df[column].duplicated(keep=False)
-    df[column].replace('', numpy.nan, inplace=True)
-    df_dupe = df[duplicate_candidates].dropna(subset=[column])
+
+    """
+    Finds for duplicates within a column
+    
+    Returns
+    -------
+    (duplicate row indices, duplicated row values)
+    """
+    # replace all blanks with NaN
+    temp_df = df.replace('', numpy.nan)
+    # keep is set to False so all duplicated values are accounted
+    column_check = temp_df[column].duplicated(keep=False)
+
+    # keep only duplicated rows and drop NaN
+    df_dupe = temp_df[column_check].dropna(subset=[column])
 
     dupes_index = df_dupe.index.tolist()
     dupes = df_dupe[column].values.tolist()
@@ -97,9 +153,21 @@ def get_column_dupes(df, column):
 
 
 def get_column_blanks(df, column):
-    df[column].replace('', numpy.nan, inplace=True)
-    blank_candidates = pandas.isnull(df[column])
-    df_blank = df[blank_candidates]
+
+    """
+    Finds for blanks within a column
+    
+    Returns
+    -------
+    (blank row indices, blank row values)
+    """
+
+    # replace all blanks with NaN
+    temp_df = df.replace('', numpy.nan)
+    column_check = pandas.isnull(temp_df[column])
+    
+    # keep only blank rows
+    df_blank = temp_df[column_check]
 
     blank_index = df_blank.index.tolist()
     blanks = df_blank[column].values.tolist()

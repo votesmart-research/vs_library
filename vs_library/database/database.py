@@ -44,9 +44,15 @@ class ConnectionInfo:
 
 class ConnectionManager:
 
-    """Manages(creates, read, update and delete) connection info using ConfigParser"""
+    """
+    Creates, Read, Update and Delete connection info using configparser
+    
+    See more on configparser at:
+    https://docs.python.org/3/library/configparser.html
+    
+    """
 
-    def __init__(self, filepath=None):
+    def __init__(self, filepath):
 
         """
         Parameters
@@ -59,24 +65,24 @@ class ConnectionManager:
         self.__filepath = filepath if os.path.isdir(filepath) else os.path.dirname(filepath)
         self.__filename = 'connections.ini'
 
-        self.parser = configparser.ConfigParser()
-        self.parser.read(f"{self.__filepath}/{self.__filename}")
+        self.__parser = configparser.ConfigParser()
+        self.__parser.read(f"{self.__filepath}/{self.__filename}")
 
     def _write(self):
 
         """Creates or use an existing file"""
 
         with open(f"{self.__filepath}/{self.__filename}", 'w') as f:
-            self.parser.write(f)
+            self.__parser.write(f)
         
     def create(self, connection_info):
 
         """Unwraps connection info and writes it to a new or existing file"""
 
         # auto increment id
-        initial_id = 1 if not self.parser.sections() else max(list(map(int, self.parser.sections()))) + 1
+        initial_id = 1 if not self.__parser.sections() else max(list(map(int, self.__parser.sections()))) + 1
 
-        self.parser[initial_id] = {
+        self.__parser[initial_id] = {
             'host': str(connection_info.host),
             'database': str(connection_info.database),
             'port': str(connection_info.port),
@@ -106,28 +112,28 @@ class ConnectionManager:
         # prevents 0 or an empty string as an input to return all connections
         if connection_id == None:
             connections = []
-            for section in self.parser.sections():
+            for section in self.__parser.sections():
                 connection_info = ConnectionInfo()
                 connection_info.connection_id = section
-                connection_info.host = self.parser[section]['host']
-                connection_info.database = self.parser[section]['database']
-                connection_info.port = self.parser[section]['port']
-                connection_info.user = self.parser[section]['user']
-                connection_info.password = self.parser[section]['password']
+                connection_info.host = self.__parser[section]['host']
+                connection_info.database = self.__parser[section]['database']
+                connection_info.port = self.__parser[section]['port']
+                connection_info.user = self.__parser[section]['user']
+                connection_info.password = self.__parser[section]['password']
                 connections.append(connection_info)
                 
             return connections, f"Total of {len(connections)} connections found."
 
         else:
-            if str(connection_id) in self.parser.sections(): 
+            if str(connection_id) in self.__parser.sections(): 
                 connection_info = ConnectionInfo()
                 connection_info.connection_id = int(connection_id)
-                connection_info.host = self.parser[str(connection_id)]['host']
-                connection_info.database = self.parser[str(connection_id)]['database']
+                connection_info.host = self.__parser[str(connection_id)]['host']
+                connection_info.database = self.__parser[str(connection_id)]['database']
                 # ConnectionInfo dataclass requires port to be int
-                connection_info.port = int(self.parser[str(connection_id)]['port'])
-                connection_info.user = self.parser[str(connection_id)]['user']
-                connection_info.password = self.parser[str(connection_id)]['password']
+                connection_info.port = int(self.__parser[str(connection_id)]['port'])
+                connection_info.user = self.__parser[str(connection_id)]['user']
+                connection_info.password = self.__parser[str(connection_id)]['password']
 
                 return connection_info, f"connection_id={connection_id} is selected"
             else:
@@ -140,8 +146,8 @@ class ConnectionManager:
 
         connection_id = str(connection_info.connection_id)
 
-        if connection_id in self.parser.sections():
-            self.parser[connection_id] = {
+        if connection_id in self.__parser.sections():
+            self.__parser[connection_id] = {
                 'host': connection_info.host,
                 'database': connection_info.database,
                 'port': connection_info.port,
@@ -155,13 +161,13 @@ class ConnectionManager:
 
         """Delete connection info by connection_id"""
 
-        if str(connection_id) in self.parser.sections():
-            self.parser.remove_section(str(connection_id))
+        if str(connection_id) in self.__parser.sections():
+            self.__parser.remove_section(str(connection_id))
             self._write()
 
     @property
     def existing_connection(self):
-        return True if self.parser.sections() else False
+        return True if self.__parser.sections() else False
 
 
 class PostgreSQL:
@@ -227,10 +233,10 @@ class PostgreSQL:
             except ProgrammingError as e:
                 # ProgrammingError returns a dict-like string
                 error_dict = eval(str(e))
-                return False, f"{error_dict['M']}"
+                return False, f"ERROR: {error_dict['M']}"
 
             except Exception as e:
-                return False, f"{str(e)}"
+                return False, f"ERROR: {str(e)}"
         else:
             return False, "Invalid connection info"
 
@@ -377,7 +383,7 @@ class QueryTool:
             if self.connection_adapter.connected:
                 self.connection_adapter.disconnect()
 
-            return False, f"{error_dict['M']}.{' ' + error_dict['H'] if 'H' in error_dict.keys() else ''}"
+            return False, f"ERROR: {error_dict['M']}.{' ' + error_dict['H'] if 'H' in error_dict.keys() else ''}"
 
         except Exception as e:
 
@@ -392,7 +398,7 @@ class QueryTool:
             if self.connection_adapter.connected:
                 self.connection_adapter.disconnect()
 
-            return False, f"{str(e)}"
+            return False, f"ERROR: {str(e)}"
     
     def export(self, filepath):
 
@@ -403,4 +409,4 @@ class QueryTool:
             return success, message
             
         except Exception as e:
-            return False, str(e)
+            return False, f"ERROR: {str(e)}"
