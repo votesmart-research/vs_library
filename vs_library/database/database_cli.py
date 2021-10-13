@@ -16,7 +16,6 @@ def will_it_int(response):
 
 class AddConnection(NodeBundle):
 
-
     def __init__(self, connection_manager, parent=None):
 
         """

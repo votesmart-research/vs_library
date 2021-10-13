@@ -10,8 +10,11 @@ from ..cli.objects import Command, Display, Prompt
 
 class ImportSpreadsheet(NodeBundle):
 
+    """User can interact with a filedialog to import and read a file"""
+
     def __init__(self, name, parent=None):
 
+        # name is specified in the child class
         name = name
         self.__filepath = None
 
@@ -55,9 +58,11 @@ class ImportSpreadsheet(NodeBundle):
 
         super().__init__(self.__entry_node, self.__exit_node, name=name, parent=parent)
 
-    def _execute(self, method=None):
-        if method:
-            success, message = method(self.__filepath)
+    def _execute(self, function=None):
+
+        # child class might utilize a specific function to read a file
+        if function:
+            success, message = function(self.__filepath)
         else:
             df, message = pandas_functions.read_spreadsheet(self.__filepath)
             success = not df.empty
@@ -74,6 +79,7 @@ class ImportSpreadsheet(NodeBundle):
         tk.withdraw()
         self.__filepath = filedialog.askopenfilename(filetypes=[('Spreadsheet files', 
                                                                  ".xls .xlsx .xlsm .xlsb .ods .csv .tsv")])
+        # to close the file dialog window
         tk.destroy()
 
         if not self.__filepath:
@@ -88,6 +94,8 @@ class ImportSpreadsheet(NodeBundle):
 
 
 class ExportSpreadsheet(NodeBundle):
+
+    """Allow user to interact with a filedialog export pandas.DataFrame to a spreadsheet"""
 
     def __init__(self, name, parent=None):
 
@@ -122,9 +130,9 @@ class ExportSpreadsheet(NodeBundle):
 
         super().__init__(self.__entry_node, self.__exit_node, name=name, parent=parent)
 
-    def _execute(self, controller=None, df=None):
-        if controller:
-            success, message = controller(self.__filepath)
+    def _execute(self, function=None, df=None):
+        if function:
+            success, message = function(self.__filepath)
         else:
             success, message = pandas_functions.to_spreadsheet(df, self.__filepath)
 
@@ -143,8 +151,9 @@ class ExportSpreadsheet(NodeBundle):
         tk = Tk()
         tk.withdraw()
 
-        self.__filepath = filedialog.asksaveasfilename(filetypes=[('Spreadsheet files', ".ods .xlsx .xlsm \
-                                                                                         .xlsb .ods .csv .tsv")])
+        self.__filepath = filedialog.asksaveasfilename(filetypes=[('Spreadsheet files', 
+                                                                   ".ods .xlsx .xlsm .xlsb .ods .csv .tsv")])
+        # to close the file dialog window
         tk.destroy()
 
         if not self.__filepath:
