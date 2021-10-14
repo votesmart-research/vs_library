@@ -3,7 +3,7 @@
 import re
 
 # internal packages
-from . import references, queries
+from . import references, queries # these modules are not included to view on public repo
 from ..cli import Node, NodeBundle, DecoyNode, textformat
 from ..cli.objects import Command, Display, Prompt, Table
 

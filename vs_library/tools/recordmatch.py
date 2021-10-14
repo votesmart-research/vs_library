@@ -34,7 +34,6 @@ def adjusted_uniqueness(uniqueness, selected_columns):
     """
 
     total = sum([uniqueness[column] for column in selected_columns])
-
     return {column: uniqueness[column]/total for column in selected_columns}
 
 
@@ -116,7 +115,7 @@ def cross(records, X, column, other_columns, threshold=0):
         To specify a column in the record
 
     other_columns : list
-        These are name of columns in other records to be cross match with
+        Specifying the list of columns to be matched with the selected column
 
     threshold : decimal
         The total matching score have to pass this in order for the possible match
@@ -142,12 +141,12 @@ def combined(records, X, columns, uniqueness, threshold=0):
     X : dict
         A record to be matched with other records
 
-    column : string
-        To specify a column in the record
+    columns : list
+        Specifying the list of columns to be matched
 
     uniqueness : dict
-        This is the uniqueness of the records itself 
-        There is no reason to compute the uniqueness of records over and over again, 
+        Uniqueness of each column in records
+        Note: No reason to compute the uniqueness of records over and over again, 
         hence this is set as a parameter
 
     threshold : decimal

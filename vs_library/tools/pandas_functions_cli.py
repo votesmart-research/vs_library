@@ -95,7 +95,7 @@ class ImportSpreadsheet(NodeBundle):
 
 class ExportSpreadsheet(NodeBundle):
 
-    """Allow user to interact with a filedialog export pandas.DataFrame to a spreadsheet"""
+    """Allow user to interact with a filedialog to export data to a spreadsheet"""
 
     def __init__(self, name, parent=None):
 
