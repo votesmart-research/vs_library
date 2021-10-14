@@ -1,6 +1,6 @@
 
-# Shows a key-value pair between office_id and name of office from the 'office' table
-# SELECT office_id, name FROM office ORDER BY rank LIMIT(9)
+# Key-value pair between office_id and name of office from the 'office' table
+# Queried from: SELECT office_id, name FROM office ORDER BY rank LIMIT(9)
 OFFICE = {
         '1': 'President',
         '2': 'Vice President',
@@ -17,8 +17,8 @@ OFFICE = {
         '79': 'Justice of the Supreme Court'
     }
 
-# Shows a key-value pair between officetype_id and type of office from the 'officetype' table
-# SELECT officetype_id, name FROM officetype WHERE officelevel_id != 'L' ORDER BY rank
+# Key-value pair between officetype_id and type of office from the 'officetype' table
+# Queried from: SELECT officetype_id, name FROM officetype WHERE officelevel_id != 'L' ORDER BY rank
 OFFICE_TYPE = {
         'P': 'Presidential',
         'C': 'Congressional',
@@ -29,8 +29,8 @@ OFFICE_TYPE = {
         'K': 'State Judicial',
     }
 
-# Shows a key-value pair between electionstage_id and stages of election from the 'electionstage' table
-# SELECT electionstage_id, name, FROM electionstage
+# Key-value pair between electionstage_id and stages of election from the 'electionstage' table
+# Queried from: SELECT electionstage_id, name, FROM electionstage
 ELECTION_STAGE = {
     'P': 'Primary',
     'G': 'General',
@@ -38,8 +38,8 @@ ELECTION_STAGE = {
     'R': 'General Runoff'
     }
 
-# Shows a key-value pair between ratingformat_id and format of ratings from the 'ratingformat' table
-# SELECT * FROM ratingformat
+# Key-value pair between ratingformat_id and format of ratings from the 'ratingformat' table
+# Queried from: SELECT * FROM ratingformat
 RATING_FORMAT = {
     '1': 'Numeric',
     '2': 'Grades',
@@ -47,8 +47,8 @@ RATING_FORMAT = {
     '-1': 'Open'
     }
 
-# Shows a key-value pair between ratingsession_id and the available legislative session from the 'ratingsession' table
-# SELECT * FROM ratingsession
+# Key-value pair between ratingsession_id and the available legislative session from the 'ratingsession' table
+# Queried from: SELECT * FROM ratingsession
 RATING_SESSION = {
     '1': 'First Session',
     '2': 'Second Session',
@@ -56,8 +56,8 @@ RATING_SESSION = {
     '-1': '#N/A or Unknown'
     }
 
-# Shows a key-value pair between finance campaign organization with its given ids from the 'finsource' table
-# SELECT finsource_id, name FROM finsource
+# Key-value pair between finance campaign organization with its given ids from the 'finsource' table
+# Queried from: SELECT finsource_id, name FROM finsource
 FINSOURCE = {
     '1': 'OpenSecrets.org',
     '2': 'Federal Election Commision',
@@ -65,8 +65,8 @@ FINSOURCE = {
     '4': 'FollowTheMoney.org v2'
     }
 
-# Shows a key-value pair between state abbreviation and state name from the 'state' table
-# SELECT state_id, name FROM state
+# Key-value pair between state abbreviation and state name from the 'state' table
+# Queried from: SELECT state_id, name FROM state
 STATE = {
     'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
     'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',

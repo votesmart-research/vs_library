@@ -98,25 +98,25 @@ def column_group_percentage(df, col):
     return df.groupby(col).size().apply(lambda x: x/len(df)*100)
 
 
-def column_uniqueness(df, col):
+def uniqueness(df):
 
     """
     Calculates the ratio of unique elements to the length of pandas.DataFrame
-    of a specified column
+    in each column
 
     Returns
     -------
-    float
+    pandas.Series
     """
 
-    return df[col].nunique().apply(lambda x: x/len(df))
+    return df.nunique().apply(lambda x: x/len(df))
 
 
-def adjusted_column_uniqueness(df, selected_cols):
+def adjusted_uniqueness(df, selected_cols):
 
     """
-    Calculates the adjusted ratio of unique elements to length of pandas.DataFrame
-    based on selected columns
+    Calculates the ratio of unique elements to length of pandas.DataFrame
+    adjusted to selected columns
     
     Returns
     -------
