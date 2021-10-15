@@ -305,7 +305,8 @@ class Prompt(CliObject):
 
     def __str__(self):
 
-        """Returns a formatted string such as:
+        """
+        Returns a formatted string such as:
         
             [1]  Select Me
             [2]  No, select me
@@ -355,6 +356,7 @@ class Table(CliObject):
         command : Command
             A Command object that can be executed before or after it is drawn
         """
+
         super().__init__(name='table', command=command, exe_seq='before')
 
         self.table = table
@@ -364,6 +366,9 @@ class Table(CliObject):
         self.description = ""
 
     def clear(self):
+        
+        """Clears the table"""
+        
         if self.header:
             del self.table[1:]
         else:
