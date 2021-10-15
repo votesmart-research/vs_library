@@ -4,6 +4,7 @@ from fuzzywuzzy import fuzz
 
 
 def uniqueness(records):
+
     """
     Calculates the ratio of unique elements to the length of records
     in each columns
@@ -122,6 +123,7 @@ def cross(records, X, column, other_columns, threshold=0):
         to be considered valid. Can be any number between 0 and 1, 0 being the lowest 
         and 1 being the highest. Ex. 0.5 is 50 percent and 0.9 is 90 percent
     """
+    
     scores = [max([match_ratio(X[column], R[o_c]) for o_c in other_columns]) for R in records]
     max_score = max(scores)
 
@@ -129,6 +131,7 @@ def cross(records, X, column, other_columns, threshold=0):
 
 
 def combined(records, X, columns, uniqueness, threshold=0):
+
     """
     Finds possible matching records based on the combination of matching string scores
     in the specified columns
@@ -154,6 +157,7 @@ def combined(records, X, columns, uniqueness, threshold=0):
         to be considered valid. Can be any number between 0 and 1, 0 being the lowest 
         and 1 being the highest. Ex. 0.5 is 50 percent and 0.9 is 90 percent
     """
+
     adj  = adjusted_uniqueness(uniqueness, columns)
 
     scores = [sum(adj[c] * match_ratio(X[c], R[c]) for c in columns) for R in records]

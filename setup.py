@@ -9,7 +9,6 @@ install_requires = []
 
 with open('requirements.txt') as f:
     for line in f.read().splitlines():
-
         if line.startswith('git+'):
             if EGG not in line:
                 raise Exception('egg specification is required.')

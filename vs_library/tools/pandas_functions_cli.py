@@ -14,7 +14,7 @@ class ImportSpreadsheet(NodeBundle):
 
     def __init__(self, name, parent=None):
 
-        # name is specified in the child class
+        # name is specified in from child class
         name = name
         self.__filepath = None
 
@@ -98,7 +98,8 @@ class ExportSpreadsheet(NodeBundle):
     """Allow user to interact with a filedialog to export data to a spreadsheet"""
 
     def __init__(self, name, parent=None):
-
+        
+        # name is specified in from child class
         name = name
         self.__filepath = None
         

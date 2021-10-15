@@ -1,6 +1,4 @@
 
-"""This modules contains query statements that can take in parameters such that it will produce results
-as a consequence of the parameters given"""
 
 class Incumbents:
 
@@ -29,8 +27,7 @@ class Incumbents:
         LEFT JOIN districtname USING (districtname_id)
         LEFT JOIN party USING (party_id)
         '''
-    # parameters are declared when constructing instance as it will be used on 
-    # multiple instance methods
+    # parameters are declared during construction as they will be used in instance methods
     def __init__(self, active_years, office_ids, office_types, states):
 
         """
@@ -54,6 +51,7 @@ class Incumbents:
         self.__conditions = {'year': int(max(active_years)),
                              'start_date': f'01-01-{min(active_years)}',
                              'end_date': f'12-31-{max(active_years)}'}
+
         # dict keys-value will be replace with an empty placeholder if not given so query could run
         self.__enum_office_ids = {f"office_id_{k}": v for k, v in enumerate(office_ids)
                                  } if office_ids else {"office_id_0": -1}
@@ -93,27 +91,27 @@ class Incumbents:
             '''
             WHERE (
                 (:year BETWEEN EXTRACT(year FROM to_date(firstelect, 'mm/dd/yyyy'))
-                              AND EXTRACT(year FROM to_date(lastelect, 'mm/dd/yyyy'))            
+                           AND EXTRACT(year FROM to_date(lastelect, 'mm/dd/yyyy'))            
                 AND EXTRACT(year FROM to_date(firstelect, 'mm/dd/yyyy')) > 1000)
             OR
                 (:year BETWEEN EXTRACT(year FROM to_date(firstelect,'mm/yyyy'))
-                             AND EXTRACT(year FROM to_date(lastelect, 'mm/yyyy'))
+                           AND EXTRACT(year FROM to_date(lastelect, 'mm/yyyy'))
                 AND EXTRACT(year FROM to_date(firstelect, 'mm/yyyy')) > 1000)
             OR
                 (:year BETWEEN EXTRACT(year FROM to_date(firstelect,'yyyy'))
-                             AND EXTRACT(year FROM to_date(lastelect, 'yyyy'))
+                           AND EXTRACT(year FROM to_date(lastelect, 'yyyy'))
                 AND EXTRACT(year FROM to_date(firstelect, 'yyyy')) > 1000)
             OR
                 (:year BETWEEN EXTRACT(year FROM to_date(firstelect,'mm/dd/yyyy'))
-                             AND EXTRACT(year FROM CASE WHEN lastelect = '' THEN now() END)
+                           AND EXTRACT(year FROM CASE WHEN lastelect = '' THEN now() END)
                 AND EXTRACT(year FROM to_date(firstelect, 'mm/dd/yyyy')) > 1000)
             OR
                 (:year BETWEEN EXTRACT(year FROM to_date(firstelect,'mm/yyyy'))
-                             AND EXTRACT(year FROM CASE WHEN lastelect = '' THEN now() END)
+                           AND EXTRACT(year FROM CASE WHEN lastelect = '' THEN now() END)
                 AND EXTRACT(year FROM to_date(firstelect, 'mm/yyyy')) > 1000)
             OR
                 (:year BETWEEN EXTRACT(year FROM to_date(firstelect,'yyyy'))
-                             AND EXTRACT(year FROM CASE WHEN lastelect = '' THEN now() END)
+                           AND EXTRACT(year FROM CASE WHEN lastelect = '' THEN now() END)
                 AND EXTRACT(year FROM to_date(firstelect, 'yyyy')) > 1000)
                 )
             AND office_candidate.state_id IN ({states})
@@ -127,6 +125,8 @@ class Incumbents:
 
 
 class ElectionCandidates:
+
+    """Holds a query statement that query for election candidates on Vote Smart's database."""
 
     statement = \
         '''
@@ -154,8 +154,7 @@ class ElectionCandidates:
         LEFT JOIN electionstage_candidate_party USING (electionstage_candidate_id)
         LEFT JOIN party ON electionstage_candidate_party.party_id = party.party_id
         '''
-    # parameters are declared when constructing instance as it will be used on 
-    # multiple instance methods
+    # parameters are declared during construction as they will be used in instance methods
     def __init__(self, election_years, election_stages, office_ids, office_types, states):
 
         """
@@ -192,7 +191,9 @@ class ElectionCandidates:
                              **self.__enum_office_types, **self.__enum_states}
 
     def by_yoss(self):
-        """'yoss' stands for years, office, stage, state. Adds conditions to the statement considering yoss. """
+        
+        """Adds conditions to the statement considering years, office, stage and state (yoss)."""
+
         statement = \
             '''
             WHERE election.electionyear IN ({election_years})

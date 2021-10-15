@@ -16,15 +16,15 @@ def will_it_int(response):
 
 class AddConnection(NodeBundle):
 
+    """Prompts user to enter necessary information for a connection to be stored"""
+
     def __init__(self, connection_manager, parent=None):
 
         """
-        Prompts user to enter necessary information for a connection to be stored.
-
         Parameters
         ----------
-        connection_manager : database.ConnectionManager
-            the controller of this bundle
+        connection_manager : vs_library.database.ConnectionManager
+            The controller of this NodeBundle
         """
 
         name = 'add-connection'
@@ -111,21 +111,22 @@ class AddConnection(NodeBundle):
 
 class SelectConnection(NodeBundle):
 
+    """Allows user to choose from a list of stored connections"""
+
     def __init__(self, connection_manager, parent=None):
 
         """
-        Allows users to choose from a list of stored connections
-
         Parameters
         ----------
-        connection_manager : database.ConnectionManager
-            the controller of this bundle
+        connection_manager : vs_library.database.ConnectionManager
+            The controller of this NodeBundle
         """
 
         name = 'select-connection'
 
         self.connection_manager = connection_manager
-        # list is a memory location such that it can be referenced
+
+        # list should only be cleared not replaced
         self.__selected_connection = []
 
         # OBJECTS
@@ -154,7 +155,7 @@ class SelectConnection(NodeBundle):
     
     def _execute(self):
         
-        # clears the list in order to append newly selected connection
+        # clears the list while maintaining memory location
         self.__selected_connection.clear()
 
         # ConnectionManager.read() requires a str or an int
@@ -185,19 +186,19 @@ class SelectConnection(NodeBundle):
 
 
 class EditConnection(NodeBundle):
+
+    """Allows user to update and delete a stored connection"""
     
     def __init__(self, connection_manager, selected_connection, parent=None):
 
         """
-        Allows user to update and delete a stored connection
-
         Parameters
         ----------
-        connection_manager : database.ConnectionManager
-            the controller of this bundle
+        connection_manager : vs_library.database.ConnectionManager
+            The controller of this NodeBundle
 
         selected_connection : list
-            may refer to the list in SelectConnection bundle
+            A list containing ConnectionInfo
         """
         
         name = 'edit-connection'
@@ -307,21 +308,22 @@ class EditConnection(NodeBundle):
 
 class EstablishConnection(NodeBundle):
 
+    """Informs the user whether connection is established successfully and allow for retries"""
+
     def __init__(self, connection_adapter, selected_connection, selection_bundle=None, parent=None):
 
         """
-        Informs the user whether connection is established successfully and allow for retries
-
         Parameters
         ----------
-        connection_adapter : database.PostgreSQL or any connection adapter
-            the controller of this bundle
+        connection_adapter : vs_library.database.PostgreSQL
+            The controller of this NodeBundle
         
         selected_connection : list
-            may refer to the list in SelectConnection bundle
+            A list containing ConnectionInfo
 
-        selection_bundle : SelectConnection
-            any bundle that selects a connection
+        selection_bundle : NodeBundle, optional
+            A Nodebundle that selects connection. 
+            SelectConnection in vs_library.database.database_cli for that purpose
         """
 
         name = 'establish-connection'
@@ -386,18 +388,19 @@ class EstablishConnection(NodeBundle):
 
 class QueryExecution(NodeBundle):
 
-    def __init__(self, query_tool, query_edit_bundle=None, parent=None):
+    """Informs user of the querying process and allows for retries"""
+
+    def __init__(self, query_tool, query_form=None, parent=None):
 
         """
-        Informs user of the querying process and allows for retries
-
         Parameters
         ----------
-        query_tool : database.QueryTool
-            the controller of this bundle
+        query_tool : vs_library.database.QueryTool
+            The controller of this NodeBundle
 
-        query_edit_bundle : (any bundle that edits a query)
-            Refer to classes in vsdb.queries_cli
+        query_edit_bundle : NodeBundle
+            A Nodebundle that aims to fills the parameters of a query statement
+            These NodeBundles can be found in vs_library.queries_cli module
         """
 
         name = 'query-execution'
@@ -423,10 +426,10 @@ class QueryExecution(NodeBundle):
         self.__node_1.adopt(self.__entry_node)
 
         # adds another option for returning to editing the query params
-        if query_edit_bundle:
-            self.__node_1.adopt(query_edit_bundle.entry_node)
-            self.__prompt_0.options['R'] = Command(lambda: self.__node_1.set_next(query_edit_bundle.entry_node), 
-                                                   value='Return to Query Edit')
+        if query_form:
+            self.__node_1.adopt(query_form.entry_node)
+            self.__prompt_0.options['R'] = Command(lambda: self.__node_1.set_next(query_form.entry_node), 
+                                                   value='Return to Query Form')
 
 
         super().__init__(self.__entry_node, self.__exit_node, name=name, parent=parent)
@@ -445,15 +448,15 @@ class QueryExecution(NodeBundle):
 
 class ExportQueryResults(pandas_functions_cli.ExportSpreadsheet):
 
+    """Query results can be saved to a location on the user's local host"""
+
     def __init__(self, query_tool, parent=None):
         
         """
-        Query results can be saved to a location on the user's local host
-
         Parameters
         ----------
-        query_tool : database.QueryTool
-            the controller of this bundle
+        query_tool : vs_library.database.QueryTool
+            The controller of this NodeBunde
         """
 
         name = 'export-query-results'
