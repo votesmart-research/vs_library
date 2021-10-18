@@ -1,6 +1,6 @@
 
 # external packages
-from fuzzywuzzy import fuzz
+from rapidfuzz import fuzz
 
 
 def uniqueness(records):
@@ -70,7 +70,7 @@ def match_ratio(a, b):
         return float(0)
 
 
-def match(records, X, column, threshold=0):
+def match(records, X, column, threshold=0.0):
 
     """
     Finds possible matching records based on scores of each string of the same column
@@ -83,10 +83,10 @@ def match(records, X, column, threshold=0):
     X : dict
         A record to be matched with other records
 
-    column : string
+    column : str
         To specify a column in the record
 
-    threshold : decimal
+    threshold : float
         The total matching score have to pass this in order for the possible match
         to be considered valid. Can be any number between 0 and 1, 0 being the lowest 
         and 1 being the highest. Ex. 0.5 is 50 percent and 0.9 is 90 percent
@@ -98,7 +98,7 @@ def match(records, X, column, threshold=0):
     return [records[index] for index, score in enumerate(scores) if score==max_score and score>=threshold]
 
 
-def cross(records, X, column, other_columns, threshold=0):
+def cross(records, X, column, other_columns, threshold=0.0):
 
     """
     Finds possible matching records based on string of a specified column cross with 
@@ -112,13 +112,13 @@ def cross(records, X, column, other_columns, threshold=0):
     X : dict
         A record to be matched with other records
 
-    column : string
+    column : str
         To specify a column in the record
 
     other_columns : list
         Specifying the list of columns to be matched with the selected column
 
-    threshold : decimal
+    threshold : float
         The total matching score have to pass this in order for the possible match
         to be considered valid. Can be any number between 0 and 1, 0 being the lowest 
         and 1 being the highest. Ex. 0.5 is 50 percent and 0.9 is 90 percent
@@ -130,7 +130,7 @@ def cross(records, X, column, other_columns, threshold=0):
     return [records[index] for index, score in enumerate(scores) if score==max_score and score>=threshold]
 
 
-def combined(records, X, columns, uniqueness, threshold=0):
+def combined(records, X, columns, uniqueness, threshold=0.0):
 
     """
     Finds possible matching records based on the combination of matching string scores
@@ -152,7 +152,7 @@ def combined(records, X, columns, uniqueness, threshold=0):
         Note: No reason to compute the uniqueness of records over and over again, 
         hence this is set as a parameter
 
-    threshold : decimal
+    threshold : float
         The total matching score have to pass this in order for the possible match
         to be considered valid. Can be any number between 0 and 1, 0 being the lowest 
         and 1 being the highest. Ex. 0.5 is 50 percent and 0.9 is 90 percent
@@ -164,4 +164,3 @@ def combined(records, X, columns, uniqueness, threshold=0):
     max_score = max(scores)
 
     return [records[index] for index, score in enumerate(scores) if score==max_score and score>=threshold]
-

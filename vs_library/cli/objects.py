@@ -19,14 +19,15 @@ class CliObject(ABC):
     
     Attributes
     ----------
-    name : string
+    name : str
         Name associated with the type of object
 
-    command : Command
+    command : cli.objects.Command
         A Command object that is used in the execute() method
 
-    exe_seq : 'before' or 'after'
-        To denote whether an object executes before or after being drawn
+    exe_seq : str
+        'before' to denote command is executed before object is drawn
+        'after' to denote command is executed after object is drawn.
     """
 
     def __init__(self, name, command, exe_seq):
@@ -46,9 +47,9 @@ class CliObject(ABC):
 
 class Command(CliObject):
 
-    """The Command class is a CliObject that allows other objects to execute a method and prints a return message."""
+    """The Command class is a CliObject that allows other objects to execute a method and prints a return message"""
 
-    def __init__(self, method=None, value='', respond=False, command=None):
+    def __init__(self, method, value='', respond=False, command=None):
 
         """
         Parameters
@@ -56,10 +57,10 @@ class Command(CliObject):
         method : function
             Can be any python functions and can return a message
 
-        value : string
+        value : str, optional
             A string representation of object when printed to terminal
 
-        respond : bool
+        respond : bool, default=False
             If True, the return message from method will be drawn
         """
 
@@ -93,13 +94,13 @@ class Command(CliObject):
 class Display(CliObject):
 
     """
-    The Display class is a CliObject that diplays messages on the command line.
+    The Display class is a CliObject that diplays messages on the command line
     
     Attributes
     ----------
     format_dict : dict
         A dictionary containing parameters to format a string variable utilizing
-        the string.format() method
+        the str.format() method
     """
 
     def __init__(self, message, command=None):
@@ -107,7 +108,7 @@ class Display(CliObject):
         """
         Parameters
         ----------
-        message : string
+        message : str
             A string to be printed on the terminal when object is drawn
         """
 
@@ -130,15 +131,15 @@ class Display(CliObject):
 class Prompt(CliObject):
 
     """
-    The Prompt class is a CliObject that allows user inputs in response to a prompt.
+    The Prompt class is a CliObject that allows user inputs in response to a prompt
     
     Attributes
     ----------
-    responses : array
+    responses : list
         May contain more than one response if multiple_selection is True,
         returns a string if multiple_selection is False
     
-    error_msg : string
+    error_msg : str
         A statement to inform user that input is invalid
     """
 
@@ -147,18 +148,18 @@ class Prompt(CliObject):
         """
         Parameters
         ----------
-        question : string
+        question : str
             A statement in a form of a question, used for prompting
         
-        options : dict
+        options : dict, optional
             Keys of dict are the options that the user selects
             while values are the description
 
-        verification : function
+        verification : function, optional
             Function that returns a boolean and optionally an error message along it
             (the return value of the function must be a boolean FIRST then error message)
 
-        multiple_selection : bool
+        multiple_selection : bool, optional
             if True, the user can select multiple options separated by comma
         """
 
@@ -193,11 +194,11 @@ class Prompt(CliObject):
         Parameters
         ---------
         string : bool
-            If True, will return a string otherwise an array
+            If True, will return a string else an array
         
         Returns
         -------
-        string or array
+        str or list
             String concatenation of an array object or an array of responses
         """
 
@@ -224,7 +225,7 @@ class Prompt(CliObject):
         
         Returns
         -------
-        boolean
+        bool
             True if the verification passes
         """
 
@@ -327,18 +328,18 @@ class Prompt(CliObject):
 class Table(CliObject):
 
     """
-    The Table class is a CliObject that display information in a tabular format on the command line.
+    The Table class is a CliObject that display information in a tabular format on the command line
     
     This is dependent on 'tabulate' python package see here:
     https://pypi.org/project/tabulate/
 
     Attributes
     ----------
-    table_header : string
-        Bolded and centered at the top of the table
+    table_header : str, optional
+        String bolded and centered at the top of the table to provide intro to the table
 
-    description : string
-        Italicize and left justify at the bottom of the table to provide 
+    description : str, optional
+        String italicized and left justified at the bottom of the table to provide 
         a description of the table
     """
 
@@ -347,14 +348,11 @@ class Table(CliObject):
         """
         Parameters
         ----------
-        table : 2D-array
-            Each array in the array will be each row of the table
+        table : list
+            List within the list will be a row of the table
 
-        header : bool
-            If true, the table emphasize the first row as header
-        
-        command : Command
-            A Command object that can be executed before or after it is drawn
+        header : bool, default=True
+            If true, table emphasize the first row as header
         """
 
         super().__init__(name='table', command=command, exe_seq='before')

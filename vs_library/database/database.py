@@ -22,7 +22,7 @@ class ConnectionInfo:
     Attributes
     ----------
     connection_id : int
-        A unique ID given to each connection info
+        A unique integer given to each connection info upon creation
 
     host : str
         Name of the host to connect
@@ -57,7 +57,6 @@ class ConnectionManager:
         """
         Parameters
         ----------
-
         filepath : str
             A path to a directory or a file
         """
@@ -101,8 +100,8 @@ class ConnectionManager:
 
         Parameters
         ----------
-        connection_id : str or int
-            ID corresponding to what is found in parser
+        connection_id : int
+            integer corresponding to what is found in parser
 
         Returns
         -------
@@ -276,7 +275,7 @@ class QueryTool:
         Parameters
         ----------
         connection_adapter : (PostgreSQL or other)
-            an extension of a database adapter
+            An extension of a database adapter
         """
 
         self.connection_adapter = connection_adapter
@@ -309,9 +308,9 @@ class QueryTool:
         Parameters
         ----------
         as_format : 'tuple', 'records', or 'pandas_df'
-            'tuple' is the direct result of a query execution
-            'records' is a list of dictionaries
-            'pandas_df' is a pandas DataFrame object
+            'tuple' returns query results as tuple
+            'records' returns a list of dictionaries
+            'pandas_df' returns a pandas DataFrame object
 
         Returns
         -------
