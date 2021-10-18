@@ -12,21 +12,21 @@ from .objects import Prompt, Command
 class Engine:
 
     """
-    Runs, stores and remember nodes of CliObjects.
+    Runs, stores and remember nodes of CliObjects
     
     Attributes
     ----------
-    current_node : Node
+    current_node : cli.Node
         The current selection of a node by the user
 
-    node_selection : array    
+    node_selection : list    
         Stores node selection and remembers the node selected
     
-    hideout_menu : CliObject, Prompt
+    hideout_menu : cli.objects.Prompt
         A menu that presents the options for the user to traverse back to a node, 
         restart the application or quit the application
     
-    restart_menu : CliObject, Prompt
+    restart_menu : cli.objects.Prompt
         A menu that presents the options for the user to restart or quit the application
     """
 
@@ -35,7 +35,7 @@ class Engine:
         """
         Parameters
         ----------
-        start_node : Node
+        start_node : cli.Node
             Starting node of the engine that contains other child nodes
 
         loop : bool
@@ -86,7 +86,7 @@ class Engine:
 
     def restart(self):
 
-        """Set the current node to the first node and clears all selection."""
+        """Set the current node to the first node and clears all selection"""
 
         self.__current_node = self.__node_selection[0]
         self.__node_selection.clear()
@@ -96,7 +96,7 @@ class Engine:
 
     def quit(self):
 
-        """Quits the application."""
+        """Quits the application"""
 
         print(textformat.apply("\nQuitting...", emphases=['italic'], text_color='magenta'))
         time.sleep(0.5)
@@ -164,13 +164,13 @@ class Node:
     id : int
         Unique id is given to each node during runtime
 
-    next : Node
+    next : cli.Node
         Child node that is set to be traverse next
     
     children : dict
         Contains child nodes where each child node is identified with their id
     
-    engine : Engine
+    engine : cli.Engine
         A 'backdoor' for node-to-engine interaction
     """
 
@@ -182,10 +182,10 @@ class Node:
         cliobject : CliObject
             Can hold a cliobject
 
-        parent : Node
+        parent : cli.Node
             Parent node that adopts this instance
 
-        name : string
+        name : str
             Name for human-readable identification
         
         show_hideout : bool
@@ -303,17 +303,17 @@ class NodeBundle:
         """
         Parameters
         ----------    
-        entry_node : Node
+        entry_node : cli.Node
             Node of a bundle where other nodes or bundle can gain access to
 
-        exit_node : Node
+        exit_node : cli.Node
             Node of a bundle where it adopts other nodes or bundle
 
-        parent : Node or NodeBundle
+        parent : cli.Node or cli.NodeBundle
             Node as parent will adopt the entry_node. NodeBundle as parent will have 
-            exit_node of parent to adopt entry_node
+            exit_node of the parent to adopt entry_node
 
-        name : string
+        name : str
             Name for human-readable identification
         """
 

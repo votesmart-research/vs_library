@@ -65,22 +65,22 @@ _BACKGROUND_COLOR_PALETTE = [attr for attr in dir(BackgoundColor) if not attr.st
 def apply(raw_text, emphases=[None], text_color=None, bg_color=None):
 
     """
-    Applies the listed palette by appending them to the raw text.
+    Applies the listed palette by appending them to the raw text
 
     Initial application of text or background color attributes cannot be overwritten or 'mixed'
     
     Parameters
     ----------
-    raw_text: string
+    raw_text: str
     
-    emphases: array
-        can have more than one attribute found in the 'TextEmphasis' class
+    emphases: list
+        One or more text formatting listed in TextEmphasis
     
-    text_color: string
-        can have one attribute found in 'TextColor' class
+    text_color: str
+        A color that is listed in TextColor
     
-    bg_color: string
-        can have one attribute found in 'BackgroundColor' class
+    bg_color: str
+        A color that is listed in BackgroundColor
     """
     
     formatted = raw_text

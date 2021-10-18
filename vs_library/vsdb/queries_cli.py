@@ -21,6 +21,9 @@ def is_validyear(x):
 
 class IncumbentQueryForm(NodeBundle):
 
+    """Prompts user to enter the necessary information to fill parameters of Incumbents query
+       See details of query in vs_library.database.queries"""
+
     def __init__(self, query_tool, parent=None):
 
         """
@@ -40,7 +43,7 @@ class IncumbentQueryForm(NodeBundle):
         # OBJECTS
         self.__display_0 = Display(textformat.apply("Incumbent Query Form", 
                                                     emphases=['bold', 'underline']))
-        self.__prompt = Prompt("Have all of these incumbents taken any actions on legislations?")
+        
         self.__prompt_0 = Prompt("Which of the following information do you have?")
         self.__prompt_1 = Prompt("Which of the following office(s) are of these incumbents?", 
                                  multiple_selection=True)
@@ -48,9 +51,10 @@ class IncumbentQueryForm(NodeBundle):
                                  multiple_selection=True)
         self.__prompt_3 = Prompt("Active year(s) of incumbents", 
                                  multiple_selection=True, verification=is_validyear)
-        self.__prompt_4 = Prompt("Which of the following state(s) are of these incumbents", 
+        self.__prompt_4 = Prompt("Have all of these incumbents taken any actions on legislations?")
+        self.__prompt_5 = Prompt("Which of the following state(s) are of these incumbents", 
                                  multiple_selection=True)
-        self.__prompt_5 = Prompt("Proceed with the above response?")
+        self.__prompt_6 = Prompt("Proceed with the above response?")
 
         self.__table_0 = Table([], header=False, command=Command(self._populate_table))
 
@@ -67,13 +71,13 @@ class IncumbentQueryForm(NodeBundle):
                              show_hideout=True)
         self.__node_3 = Node(self.__prompt_3, name=f'{name}_year', parent=self.__node_1,
                              show_hideout=True)
-        self.__node_4 = Node(self.__prompt, name=f'{name}_legislative', parent=self.__node_3,
+        self.__node_4 = Node(self.__prompt_4, name=f'{name}_legislative', parent=self.__node_3,
                            show_hideout=True)
-        self.__node_5 = Node(self.__prompt_4, name=f'{name}_states', parent=self.__node_3, 
+        self.__node_5 = Node(self.__prompt_5, name=f'{name}_states', parent=self.__node_3, 
                              show_hideout=True)
         self.__node_6 = Node(self.__table_0, name=f'{name}_responses', parent=self.__node_5,
                              store=False)
-        self.__node_7 = Node(self.__prompt_5, name=f'{name}_confirm', parent=self.__node_6, 
+        self.__node_7 = Node(self.__prompt_6, name=f'{name}_confirm', parent=self.__node_6, 
                              show_hideout=True, store=False)
 
         self.__exit_node = DecoyNode(name=f'{name}_last-node', parent=self.__node_7)
@@ -86,7 +90,7 @@ class IncumbentQueryForm(NodeBundle):
         self.__table_0.table_header = "Response"
         self.__table_0.description = "Shows the filled incumbent query form"
 
-        self.__prompt.options = {
+        self.__prompt_4.options = {
             '1': 'Yes',
             '2': 'No'
         }
@@ -100,14 +104,14 @@ class IncumbentQueryForm(NodeBundle):
 
         self.__prompt_1.options = references.OFFICE
         self.__prompt_2.options = references.OFFICE_TYPE
-        self.__prompt_4.options = references.STATE| {'**': 'ALL'}
+        self.__prompt_5.options = references.STATE| {'**': 'ALL'}
 
         # by_congstatus only works if incumbents are over year 2005
         self.__prompt_3.command = Command(lambda: self.__node_3.set_next(self.__node_4) 
                                                   if int(min(self.__prompt_3.responses))>=2005 
                                                   else self.__node_3.set_next(self.__node_5))
 
-        self.__prompt_5.options = {
+        self.__prompt_6.options = {
             '1': Command(self._execute, value="Yes", 
                          command=Command(lambda: self.__node_7.set_next(self.__exit_node))),
             '2': Command(lambda: self.__node_7.set_next(self.__node_0), value="No, re-enter responses")
@@ -115,12 +119,24 @@ class IncumbentQueryForm(NodeBundle):
 
         super().__init__(self.__entry_node, self.__exit_node, name=name, parent=parent)
 
+    # to prevent unintended edits
+    def clear_all(self):
+
+        """Clears all user's inputs"""
+
+        self.__prompt_0.clear()
+        self.__prompt_1.clear()
+        self.__prompt_2.clear()
+        self.__prompt_3.clear()
+        self.__prompt_4.clear()
+        self.__prompt_5.clear()
+
     def _execute(self):
-        legislative = self.__prompt.option_responses(string=True)
+        legislative = self.__prompt_4.option_responses(string=True)
         office_ids = self.__prompt_1.responses
         office_types = self.__prompt_2.responses
         years = self.__prompt_3.responses
-        states = self.__prompt_4.responses
+        states = self.__prompt_5.responses
 
         if legislative == 'Yes':
             self.query_tool.query  = queries.Incumbents(years, office_ids, office_types, states).by_congstatus()
@@ -131,18 +147,17 @@ class IncumbentQueryForm(NodeBundle):
         self.__table_0.table = [["Office(s)", self.__prompt_1.option_responses(string=True)],
                                 ["Office Type(s)", self.__prompt_2.option_responses(string=True)],
                                 ["Year(s)", ", ".join(self.__prompt_3.responses)],
-                                ["State(s)", self.__prompt_4.option_responses(string=True)]]
+                                ["State(s)", self.__prompt_5.option_responses(string=True)]]
     
 
 class CandidateQueryForm(NodeBundle):
 
+    """Prompts user to enter the necessary information to fill parameters of the ElectionCandidate query
+       See details of query in vs_library.database.queries"""
+
     def __init__(self, query_tool, parent=None):
 
-        """
-        Prompts user to enter the necessary information to fill parameters of the ElectionCandidate query
-
-        See details of query in vs_library.database.queries
-        
+        """        
         Parameters
         ----------
         query_tool : vs_library.database.QueryTool
@@ -218,6 +233,18 @@ class CandidateQueryForm(NodeBundle):
             }
 
         super().__init__(self.__entry_node, self.__exit_node, name=name, parent=parent)
+
+    # to prevent unintended edits
+    def clear_all(self):
+
+        """Clear all user's input"""
+
+        self.__prompt_0.clear()
+        self.__prompt_1.clear()
+        self.__prompt_2.clear()
+        self.__prompt_3.clear()
+        self.__prompt_4.clear()
+        self.__prompt_5.clear()
 
     def _execute(self):
         election_stages = self.__prompt_0.responses

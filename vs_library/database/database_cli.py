@@ -23,7 +23,7 @@ class AddConnection(NodeBundle):
         """
         Parameters
         ----------
-        connection_manager : vs_library.database.ConnectionManager
+        connection_manager : database.ConnectionManager
             The controller of this NodeBundle
         """
 
@@ -90,9 +90,11 @@ class AddConnection(NodeBundle):
 
         return textformat.apply(msg, emphases=['italic'], text_color='green')
 
+    # to prevent unintended edits
     def clear_all(self):
 
-        # must clear results to prevent from unintended edits
+        """Clear all user's inputs"""
+
         self.__prompt_0.clear()
         self.__prompt_1.clear()
         self.__prompt_2.clear()
@@ -118,7 +120,7 @@ class SelectConnection(NodeBundle):
         """
         Parameters
         ----------
-        connection_manager : vs_library.database.ConnectionManager
+        connection_manager : database.ConnectionManager
             The controller of this NodeBundle
         """
 
@@ -194,7 +196,7 @@ class EditConnection(NodeBundle):
         """
         Parameters
         ----------
-        connection_manager : vs_library.database.ConnectionManager
+        connection_manager : database.ConnectionManager
             The controller of this NodeBundle
 
         selected_connection : list
@@ -315,15 +317,15 @@ class EstablishConnection(NodeBundle):
         """
         Parameters
         ----------
-        connection_adapter : vs_library.database.PostgreSQL
+        connection_adapter : database.PostgreSQL
             The controller of this NodeBundle
         
         selected_connection : list
             A list containing ConnectionInfo
 
-        selection_bundle : NodeBundle, optional
+        selection_bundle : vs_library.cli.NodeBundle, optional
             A Nodebundle that selects connection. 
-            SelectConnection in vs_library.database.database_cli for that purpose
+            SelectConnection is found in vs_library.database.database_cli
         """
 
         name = 'establish-connection'
@@ -395,10 +397,10 @@ class QueryExecution(NodeBundle):
         """
         Parameters
         ----------
-        query_tool : vs_library.database.QueryTool
+        query_tool : database.QueryTool
             The controller of this NodeBundle
 
-        query_edit_bundle : NodeBundle
+        query_edit_bundle : vs_library.cli.NodeBundle
             A Nodebundle that aims to fills the parameters of a query statement
             These NodeBundles can be found in vs_library.queries_cli module
         """
@@ -455,7 +457,7 @@ class ExportQueryResults(pandas_functions_cli.ExportSpreadsheet):
         """
         Parameters
         ----------
-        query_tool : vs_library.database.QueryTool
+        query_tool : database.QueryTool
             The controller of this NodeBunde
         """
 
