@@ -362,6 +362,6 @@ class DecoyNode(Node):
 
     def __init__(self, name='decoy-node', parent=None):
         # CliObject Command is used to replace the need of declaring another object
-        _object = Command()
+        _object = Command(lambda: None)
         _object.name = 'decoy'
         super().__init__(_object, parent=parent, name=name, show_hideout=False, store=False)
