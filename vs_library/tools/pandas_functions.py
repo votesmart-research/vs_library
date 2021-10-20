@@ -1,10 +1,12 @@
 
 # built-ins
 import os
+from collections import defaultdict
 
 # external packages
 import pandas
 import numpy
+from rapidfuzz import process, fuzz
 
 
 def read_spreadsheet(filepath):
@@ -19,7 +21,6 @@ def read_spreadsheet(filepath):
     filepath : str
         Path to spreadsheet file on user's computer to be imported
     """
-
 
     _ , ext = os.path.splitext(filepath)
 
@@ -124,8 +125,6 @@ def adjusted_uniqueness(df, selected_cols):
     """
 
     u = df[selected_cols].nunique().apply(lambda x: x/len(df))
-
-
     return u.apply(lambda x: x / u.sum())
 
 
@@ -173,3 +172,154 @@ def get_column_blanks(df, column):
     blanks = df_blank[column].values.tolist()
 
     return blank_index, blanks
+
+
+class PandasMatcher:
+
+    def __init__(self):
+
+        self.__df_to = pandas.DataFrame()
+        self.__df_from = pandas.DataFrame()
+
+        self.columns_to_match = defaultdict(list)
+        self.columns_to_get = []
+        self.column_threshold = defaultdict(float)
+        self.required_threshold = 75
+        self.cutoff = False
+
+    @property
+    def df_to(self):
+        return self.__df_to
+
+    @df_to.setter
+    def df_to(self, df):
+        self.__df_to = df.astype('string').replace(pandas.NA, '')
+        self.columns_to_match.clear()
+
+        for column_to in self.__df_to.columns:
+            self.column_threshold[column_to] = self.required_threshold
+            if column_to in self.__df_from.columns:
+                self.columns_to_match[column_to].append(column_to)
+            else:
+                self.columns_to_match[column_to] = []
+
+    @property
+    def df_from(self):
+        return self.__df_from
+
+    @df_from.setter
+    def df_from(self, df):
+        self.__df_from = df.astype('string').replace(pandas.NA, '')
+        self.columns_to_get.clear()
+
+        for _, columns_from in self.columns_to_match.items():
+            columns_from.clear()
+
+        for column_from in self.__df_from.columns:
+            if column_from in self.columns_to_match.keys():
+                self.columns_to_match[column_from].append(column_from)
+
+    def _choices(self):
+        choices = {}
+        for column_to, columns_from in self.columns_to_match.items():
+            for column_from in columns_from:
+                if column_to not in choices.keys():
+                    choices[column_to] = self.__df_from[column_from].copy()
+                else:
+                    choices[column_to] += ' ' + self.__df_from[column_from]
+
+        return choices
+
+    def _compute_score(self, choices, index_to, uniqueness):
+        match_scores = defaultdict(float)
+
+        for column_to, columns_from in self.columns_to_match.items():
+
+            if columns_from:
+                row_to = self.__df_to.iloc[index_to]
+                matches = process.extract(row_to[column_to], choices[column_to],
+                                          scorer=fuzz.WRatio,
+                                          limit=len(self.__df_from),
+                                          score_cutoff=0 if not self.cutoff else self.column_threshold[
+                                                                                     column_to] or 0)
+
+                for _, score, index_from in matches:
+                    match_scores[index_from] += score * uniqueness[column_to]
+
+        return match_scores
+
+    def _top_matches(self, match_scores, optimal_threshold):
+
+        def filter_highest(y):
+            return {k: v for k, v in y.items() if v == max(y.values())}
+
+        top_matches = defaultdict(dict)
+
+        for index_from, match_score in filter_highest(match_scores).items():
+            if round(match_score, 2) >= round(self.required_threshold, 2):
+                match_status = 'REVIEW' if match_score < optimal_threshold else 'MATCHED'
+                top_matches[index_from].update({'match_status': match_status,
+                                                'match_score': match_score})
+
+        return top_matches
+
+    def match(self):
+
+        columns_to_match = [column for column in self.columns_to_match.keys() if self.columns_to_match[column]]
+        uniqueness = adjusted_uniqueness(self.__df_to, columns_to_match)
+        optimal_threshold = sum([self.column_threshold[column] * uniqueness[column] for column in columns_to_match])
+
+        choices = self._choices()
+        df_matched = self.__df_to.copy()
+
+        scores = []
+
+        summary = {'average_score': 0.0,
+                   'highest_score': 0.0,
+                   'lowest_score': 0.0,
+                   'optimal': 0,
+                   'review': 0,
+                   'total': 0,
+                   'unmatched': 0,
+                   'ambiguous': 0}
+                   
+        for index_to in range(0, len(self.__df_to)):
+
+            match_scores = self._compute_score(choices, index_to, uniqueness)
+            top_matches = self._top_matches(match_scores, optimal_threshold)
+
+            if len(top_matches) == 1:
+                index_from = next(iter(top_matches))
+
+                for column in self.columns_to_get:
+                    df_matched.at[index_to, column] = self.__df_from.at[index_from, column]
+
+                df_matched.at[index_to, 'row_index'] = int(index_from + 2)
+                df_matched.at[index_to, 'match_score'] = top_matches[index_from]['match_score']
+                df_matched.at[index_to, 'match_status'] = top_matches[index_from]['match_status']
+
+                scores.append(top_matches[index_from]['match_score'])
+
+                if top_matches[index_from]['match_status'] == "REVIEW":
+                    summary['review'] += 1
+                elif top_matches[index_from]['match_status'] == "MATCHED":
+                    summary['optimal'] += 1
+
+                summary['total'] += 1
+
+            elif len(top_matches) > 1:
+                df_matched['row_index'] = df_matched['row_index'].astype('object')
+                df_matched.at[index_to, 'row_index'] = ', '.join(list(map(str, top_matches.keys())))
+                df_matched.at[index_to, 'match_status'] = 'AMBIGUOUS'
+
+                summary['ambiguous'] += 1
+
+            else:
+                df_matched.at[index_to, 'match_status'] = 'UNMATCHED'
+                summary['unmatched'] += 1
+
+        summary['average_score'] = sum(scores) / len(scores) if scores else 0
+        summary['highest_score'] = max(scores) if scores else -1
+        summary['lowest_match_score'] = min(scores) if scores else -1
+
+        return df_matched, summary
