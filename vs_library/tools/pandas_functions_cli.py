@@ -1,8 +1,7 @@
 
 # built-ins
+from os import terminal_size
 from tkinter import Tk, filedialog
-
-import pandas
 
 # internal packages
 from . import pandas_functions
@@ -19,6 +18,7 @@ class ImportSpreadsheet(NodeBundle):
         # name is specified in from child class
         name = name
         self.__filepath = None
+        self.__df = None
 
         # OBJECTS
         self.__display_0 = Display("Opening File Dialog...", command=Command(self._filedialog))
@@ -66,8 +66,8 @@ class ImportSpreadsheet(NodeBundle):
         if function:
             success, message = function(self.__filepath)
         else:
-            df, message = pandas_functions.read_spreadsheet(self.__filepath)
-            success = not df.empty
+            self.__df, message = pandas_functions.read_spreadsheet(self.__filepath)
+            success = not self.__df.empty
 
         if success:
             self.__prompt_1.question.format_dict = {'message': message}
@@ -93,6 +93,10 @@ class ImportSpreadsheet(NodeBundle):
             self.__display_0.command.respond = False
             self.__entry_node.acknowledge = False
             self.__entry_node.set_next(self.__node_0)
+ 
+    @property
+    def df(self):
+        return self.__df
 
 
 class ExportSpreadsheet(NodeBundle):
@@ -194,16 +198,17 @@ class PMMainMenu(NodeBundle):
 
         self.__exit_node = DecoyNode(name=f'{name}_last-node')
 
-        self.__bundle_4.adopt(self.__exit_node)
+        self.__bundle_4.adopt_node(self.__exit_node)
+
     
         # CONFIGURATION
 
         self.__prompt_0.options = {
-            '1': Command(self.__node_0.set_next(self.__bundle_0.entry_node), value="Set Column Threshold"),
-            '2': Command(self.__node_0.set_next(self.__bundle_1.entry_node), value="Set Columns To Match"),
-            '3': Command(self.__node_0.set_next(self.__bundle_2.entry_node), value="Set Columns to Get"),
-            '4': Command(self.__node_0.set_next(self.__bundle_3.entry_node), value="Additional Settings"),
-            'M': Command(self.__node_0.set_next(self.__bundle_4.entry_node), value="Commence Match"),
+            '1': Command(lambda: self.__node_0.set_next(self.__bundle_0.entry_node), value="Set Column Threshold"),
+            '2': Command(lambda: self.__node_0.set_next(self.__bundle_1.entry_node), value="Set Columns To Match"),
+            '3': Command(lambda: self.__node_0.set_next(self.__bundle_2.entry_node), value="Set Columns to Get"),
+            '4': Command(lambda: self.__node_0.set_next(self.__bundle_3.entry_node), value="Additional Settings"),
+            'M': Command(lambda: self.__node_0.set_next(self.__bundle_4.entry_node), value="Commence Match"),
         }
 
         if isinstance(parent, Node):
@@ -213,6 +218,8 @@ class PMMainMenu(NodeBundle):
             self.__node_0.adopt(parent.entry_node)
             self.__prompt_0.options['R'] = Command(self.__node_0.set_next(parent.entry_node), value="Return")
         
+        super().__init__(self.__entry_node, self.__exit_node, name=name, parent=parent)
+
 
 class PMSetColumnThreshold(NodeBundle):
     
@@ -222,23 +229,28 @@ class PMSetColumnThreshold(NodeBundle):
         self.pandas_matcher = pandas_matcher
         
         # OBJECTS
-        self.__table_0 = Table([['Options', 'Column', 'Threshold']], command=self._populate_table)
-        self.__prompt_0 = Prompt("Select the column to change (by the options)")
-        self.__prompt_1 = Prompt("What is the threshold you would like to change to?")
-        self.__prompt_2 = Prompt("Do you want to set another column's threshold?")
+        self.__table_0 = Table([['Options', 'Column', 'Threshold']], command=Command(self._populate_table))
+        self.__prompt_0 = Prompt("Select a column by the options", verification=self._verfiy_selection)
+        self.__prompt_1 = Prompt("What is the threshold you would like to change to?", 
+                                 verification=self._verify_threshold, command=Command(self._execute))
+        self.__prompt_2 = Prompt("Do you want to set another threshold?")
 
         # NODES
-        self.__entry_node = Node(self.__table_0, name=name)
+        self.__entry_node = Node(self.__table_0, name=name,
+                                 store=False)
+        
         self.__node_0 = Node(self.__prompt_0, name=f'{name}_select', parent=self.__entry_node,
                              store=False)
         self.__node_1 = Node(self.__prompt_1, name=f'{name}_change', parent=self.__node_0,
                              store=False)
         self.__node_2 = Node(self.__prompt_2, name=f'{name}_set-another', parent=self.__node_1)
+
         self.__exit_node = DecoyNode()
 
         self.__node_2.adopt(self.__entry_node)
 
         # CONFIGURATIONS
+
         self.__prompt_2.options = {
             '1': Command(lambda: self.__node_2.set_next(self.__entry_node), value='Yes'),
             '2': Command(lambda: self.__node_2.set_next(self.__exit_node), value='No')
@@ -253,26 +265,191 @@ class PMSetColumnThreshold(NodeBundle):
 
         super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
 
-    def _populate_table(self):
-        pass
+    def _execute(self):
+        r = int(self.__prompt_0.responses)
+        new_threshold = self.__prompt_1.responses
 
+        if r and new_threshold:
+            column = dict(enumerate(self.pandas_matcher.column_threshold, 1))[int(r)]
+            self.pandas_matcher.column_threshold[column] = new_threshold
+
+    def _verfiy_selection(self, s):
+        try:
+            if int(s) in dict(enumerate(self.pandas_matcher.column_threshold, 1)).keys():
+                return True
+            else:
+                return False, "Option is not available."
+        except:
+            return False, "Option is not available."
+
+    @staticmethod
+    def _verify_threshold(t):
+        try:
+            if int(t)>=0 and int(t)<=100:
+                return True
+            else:
+                return False, "Enter a number between 0 to 100, as this denotes percentage."
+        except:
+            return False, "Enter a number between 0 to 100, as this denotes percentage."
+
+    def _populate_table(self):
+        self.__table_0.clear()
+        for option, (column, threshold) in enumerate(map(tuple,self.pandas_matcher.column_threshold.items()),1):
+            self.__table_0.table.append([option, column, threshold])
+        
 
 class PMSetColumnsToMatch(NodeBundle):
+    def __init__(self, pandas_matcher, parent=None):
+
+        name = "pandas-matcher_column-to-match"
+        self.pandas_matcher = pandas_matcher
+        
+        # OBJECTS
+        self.__table_0 = Table([["Columns to Match", "Match With"]], command=Command(self._populate_table))
+        self.__prompt_0 = Prompt("What would you like to change?")
+        
+        # NODES
+        self.__entry_node = Node(self.__table_0, name=name)
+        self.__node_0 = Node(self.__prompt_0, name=f"{name}_select-change", parent=self.__entry_node)
+        self.__exit_node = DecoyNode(name=f"{name}_last-node", parent=self.__node_0)
+
+        self.__bundle_0 = _PMToMatch(pandas_matcher, parent=self.__node_0)
+        self.__bundle_1 = _PMMatchWith(pandas_matcher, parent=self.__node_0)
+
+        # CONFIGURATIONS
+        self.__prompt_0.options = {
+            '1': Command(lambda: self.__node_0.set_next(self.__bundle_0.entry_node), value="Columns to match"),
+            '2': Command(lambda: self.__node_0.set_next(self.__bundle_1.entry_node), value="Columns to match with")
+        }
+
+        self.__table_0.table_header = "Set Columns to Match"
+        self.__table_0.description = "Shows the columns to match and columns to be match with"
+
+        super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
+
+        if isinstance(parent, Node):
+            self.__node_0.adopt(parent)
+            self.__prompt_0.options['R'] = Command(lambda: self.__node_0.set_next(parent), value='Return')
+        elif isinstance(parent, NodeBundle):
+            self.__node_0.adopt(parent.entry_node)
+            self.__prompt_0.options['R'] = Command(lambda: self.__node_0.set_next(parent.entry_node), value='Return')
+
+    def _populate_table(self):
+        self.__table_0.clear()
+        print(self.pandas_matcher.columns_to_match)
+        for column, match_with in self.pandas_matcher.columns_to_match.items():
+            self.__table_0.table.append([column, ", ".join(match_with)])
+
+
+class _PMToMatch(NodeBundle):
+
     def __init__(self, pandas_matcher, parent=None):
 
         name = ""
         self.pandas_matcher = pandas_matcher
         
         # OBJECTS
-
+        self.__table_0 = Table([["Columns to match"]], command=Command(self._populate_table))
+        self.__prompt_0 = Prompt("Select the following action")
+        self.__prompt_1 = Prompt("Which column would you like to add?", multiple_selection=True,
+                                 command=Command(self._populate_to_add))
+        self.__prompt_2 = Prompt("Which column would you like to remove?", multiple_selection=True, 
+                                 command=Command(self._populate_to_remove))
 
         # NODES
-        self.__entry_node = Node()
+        self.__entry_node = Node(self.__table_0, name=name,
+                                 store=False)
+        self.__node_0 = Node(self.__prompt_0, name=f"{name}_select-action", parent=self.__entry_node)
+        self.__node_1 = Node(self.__prompt_1, parent=self.__node_0)
+        self.__node_2 = Node(self.__prompt_2, parent=self.__node_0)
+        self.__exit_node = DecoyNode(name=f"{name}_not-an-exit")
+
+        # CONFIGURATIONS
+        self.__node_1.adopt(self.__entry_node)
+        self.__node_2.adopt(self.__entry_node)
+
+        self.__prompt_0.options = {
+            '1': Command(lambda: self.__node_0.set_next(self.__node_1), value="Add columns"),
+            '2': Command(lambda: self.__node_0.set_next(self.__node_2), value="Remove columns")
+        }
+
+        self.__prompt_1.exe_seq = 'before'
+        self.__prompt_2.exe_seq = 'before'
+
+        if isinstance(parent, Node):
+            self.__node_0.adopt(parent)
+            self.__prompt_0.options['R'] = Command(lambda: self.__node_0.set_next(parent), value='Return')
+        elif isinstance(parent, NodeBundle):
+            self.__node_0.adopt(parent.entry_node)
+            self.__prompt_0.options['R'] = Command(lambda: self.__node_0.set_next(parent.entry_node), value='Return')
+
+        super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
+    
+    def _populate_to_add(self):
+
+        self.__prompt_1.options.clear()
+
+        columns_to_match = self.pandas_matcher.columns_to_match.keys()
+        pm_df_to = self.pandas_matcher.df_to.columns
+
+        columns_not_added = [c for c in pm_df_to if c not in columns_to_match]
+
+        def _add(self, column):
+            self.pandas_matcher.column_threshold[column] = self.pandas_matcher.required_threshold
+            self.pandas_matcher.columns_to_match[column] = [column] if column in pm_df_to else []
+
+        for index, column in enumerate(columns_not_added, 1):
+            self.__prompt_1.options[str(index)] = Command(lambda column=column: _add(self, column), value=column)
+
+        self.__prompt_1.options['R'] = Command(lambda: self.__node_1.set_next(self.__entry_node), value="Return")
+ 
+    def _populate_to_remove(self):
+
+        self.__prompt_2.options.clear()
+        
+        def _remove(self, column):
+            self.pandas_matcher.column_threshold.pop(column)
+            self.pandas_matcher.columns_to_match.pop(column)
+
+        columns_to_match = self.pandas_matcher.columns_to_match.keys()
+        
+        for index, column in enumerate(columns_to_match, 1):
+            self.__prompt_2.options[str(index)] = Command(lambda column=column: _remove(self, column), value=column)
+
+        self.__prompt_2.options['R'] = Command(lambda: self.__node_2.set_next(self.__entry_node), value="Return")
+
+
+    def _populate_table(self):
+        self.__table_0.clear()
+        for column, _ in self.pandas_matcher.columns_to_match.items():
+            self.__table_0.table.append([column])
+
+
+class _PMMatchWith(NodeBundle):
+
+    def __init__(self, pandas_matcher, parent=None):
+
+        name = ""
+        self.pandas_matcher = pandas_matcher
+        
+        # OBJECTS
+        self.__prompt_0 = Prompt("Select a column to match")
+        self.__table_0 = Table([["Columns to match with"]])
+        self.__prompt_1 = Prompt("Select the following action")
+        self.__prompt_2 = Prompt("Which column would you like to add?")
+        self.__prompt_3 = Prompt("Which column would you like to remove?")
+        
+
+        # NODES
+        self.__entry_node = Node(Display('test'))
         self.__exit_node = DecoyNode()
 
         # CONFIGURATIONS
 
         super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
+
+    def _populate_table(self):
+        pass
 
 
 class PMSetColumnsToGet(NodeBundle):
@@ -283,9 +460,8 @@ class PMSetColumnsToGet(NodeBundle):
         
         # OBJECTS
 
-
         # NODES
-        self.__entry_node = Node()
+        self.__entry_node = Node(Display('test'))
         self.__exit_node = DecoyNode()
 
         # CONFIGURATIONS
@@ -301,9 +477,8 @@ class PMAdditionalSettings(NodeBundle):
         
         # OBJECTS
 
-
         # NODES
-        self.__entry_node = Node()
+        self.__entry_node = Node(Display('test'))
         self.__exit_node = DecoyNode()
 
         # CONFIGURATIONS
@@ -312,4 +487,18 @@ class PMAdditionalSettings(NodeBundle):
 
 
 class PMCommenceMatch(NodeBundle):
-    pass
+    def __init__(self, pandas_matcher, parent=None):
+
+        name = ""
+        self.pandas_matcher = pandas_matcher
+        
+        # OBJECTS
+
+        # NODES
+        self.__entry_node = Node(Display('test'))
+        self.__exit_node = DecoyNode()
+
+        # CONFIGURATIONS
+
+        super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
+

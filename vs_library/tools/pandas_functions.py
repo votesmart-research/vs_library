@@ -181,9 +181,9 @@ class PandasMatcher:
         self.__df_to = pandas.DataFrame()
         self.__df_from = pandas.DataFrame()
 
+        self.column_threshold = defaultdict(float)
         self.columns_to_match = defaultdict(list)
         self.columns_to_get = []
-        self.column_threshold = defaultdict(float)
         self.required_threshold = 75
         self.cutoff = False
 
