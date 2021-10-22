@@ -96,12 +96,11 @@ class Engine:
 
     def quit(self):
 
-        """Quits the application"""
+        """Things to do when engine is stopped"""
 
-        print(textformat.apply("\nQuitting...", emphases=['italic'], text_color='magenta'))
+        print(textformat.apply("\nStopping Engine...", emphases=['italic'], text_color='magenta'))
         time.sleep(0.5)
         self.clear_terminal()
-        sys.exit()
 
     def run(self):
         
@@ -144,14 +143,16 @@ class Engine:
                             break
                         except KeyboardInterrupt:
                             pass
+
+                    if self.hideout_menu.responses == 'Q':
+                        break
+
             else:
                 if self.loop:
                     self.clear_terminal()
                     self.restart_menu.draw()
                 else:
                     break
-
-        self.quit()
 
 
 class Node:
