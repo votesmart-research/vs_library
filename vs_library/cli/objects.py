@@ -166,7 +166,7 @@ class Prompt(CliObject):
         super().__init__(name='prompt', command=command, exe_seq='after')
 
         self.__question = Display(question)
-        self.options = options if options else {}
+        self.options = options if options else dict()
         self.verification = verification
         self.multiple_selection = multiple_selection
 
