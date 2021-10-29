@@ -72,7 +72,7 @@ class IncumbentQueryForm(NodeBundle):
         self.__node_3 = Node(self.__prompt_3, name=f'{name}_year', parent=self.__node_1,
                              show_hideout=True)
         self.__node_4 = Node(self.__prompt_4, name=f'{name}_legislative', parent=self.__node_3,
-                           show_hideout=True)
+                             show_hideout=True)
         self.__node_5 = Node(self.__prompt_5, name=f'{name}_states', parent=self.__node_3, 
                              show_hideout=True)
         self.__node_6 = Node(self.__table_0, name=f'{name}_responses', parent=self.__node_5,

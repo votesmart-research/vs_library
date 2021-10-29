@@ -186,7 +186,7 @@ class Prompt(CliObject):
     def responses(self):
         return self.__responses if self.multiple_selection else next(iter(self.__responses))
     
-    def option_responses(self, string=False):
+    def option_responses(self, string=True):
 
         """
         Returns the option values of the user response
@@ -209,7 +209,7 @@ class Prompt(CliObject):
             if self.options:
                 response.append(str(self.options[r]))
 
-        return ', '.join(response)
+        return ", ".join(response) if string else response
 
     def _verify(self):
 
