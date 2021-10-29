@@ -207,10 +207,7 @@ class Prompt(CliObject):
         for r in self.__responses:
 
             if self.options:
-                if isinstance(self.options[r], Command):
-                    response.append(self.options[r].value)
-                else:
-                    response.append(self.options[r])
+                response.append(str(self.options[r]))
 
         return response if not string else ', '.join(response)
 
@@ -289,9 +286,9 @@ class Prompt(CliObject):
         # executes the selected option if it is a Command
         if self.options:
             for r in set(self.__responses):
-                cleaned_r = r.strip()
-                if isinstance(self.options[cleaned_r], Command):
-                    self.options[cleaned_r].execute()
+                r = r.strip()
+                if isinstance(self.options[r], Command):
+                    self.options[r].execute()
 
     def execute(self):
         if isinstance(self.command, Command):
