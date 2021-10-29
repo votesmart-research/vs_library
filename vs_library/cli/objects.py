@@ -209,7 +209,7 @@ class Prompt(CliObject):
             if self.options:
                 response.append(str(self.options[r]))
 
-        return response if not string else ', '.join(response)
+        return ', '.join(response)
 
     def _verify(self):
 
