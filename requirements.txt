@@ -1,6 +1,6 @@
-odfpy==1.4.1
-pandas==1.3.3
-pg8000==1.21.2
-rapidfuzz==1.7.1
+odfpy
+pandas
+pg8000
+rapidfuzz
 python-Levenshtein
-tabulate==0.8.9
+tabulate
