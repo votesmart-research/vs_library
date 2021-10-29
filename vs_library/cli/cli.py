@@ -107,53 +107,52 @@ class Engine:
         """Traverses and executes nodes while triggering events pertaining to each node attributes"""
 
         while True:
+            try:
+                if self.__current_node:
+                    self.__current_node.engine = self
+                    print()
 
-            if self.__current_node:
-                self.__current_node.engine = self
-                print()
+                    if self.__current_node.clear_screen:
+                        self.clear_terminal()
 
-                if self.__current_node.clear_screen:
-                    self.clear_terminal()
+                    if self.__current_node.show_hideout:
+                        print(textformat.apply("To open hideout menu, press Ctrl + C\n", emphases=['italic'], text_color='cyan'))
 
-                if self.__current_node.show_hideout:
-                    print(textformat.apply("To open hideout menu, press Ctrl + C\n", emphases=['italic'], text_color='cyan'))
-
-                # CTRL + C will trigger the hideout menu
-                try:
-                    self.__current_node.execute()
-
-                    if self.__current_node.acknowledge:
-                        _ = input(textformat.apply("\nPress ENTER to continue.", emphases=['blink'], text_color='magenta'))
-
-                    # automatically set next node to the only child
-                    if len(self.__current_node.children) == 1:
-                        self.__current_node.set_next(next(iter(self.__current_node.children.values())))
+                    # CTRL + C will trigger the hideout menu
                     
-                    if self.__current_node.store and self.__current_node.id != self.__node_selection[-1].id:
-                            self.__node_selection.append(self.__current_node)
+                        self.__current_node.execute()
 
-                    self.__current_node = self.__current_node.next
+                        if self.__current_node.acknowledge:
+                            _ = input(textformat.apply("\nPress ENTER to continue.", emphases=['blink'], text_color='magenta'))
 
-                except KeyboardInterrupt:
-                    # Loop to prevent user from further triggering another KeyboardInterrupt
-                    while True:
-                        try:
-                            self.clear_terminal()
-                            self.hideout_menu.draw()
-                            break
-                        except KeyboardInterrupt:
-                            pass
+                        # automatically set next node to the only child
+                        if len(self.__current_node.children) == 1:
+                            self.__current_node.set_next(next(iter(self.__current_node.children.values())))
+                        
+                        if self.__current_node.store and self.__current_node.id != self.__node_selection[-1].id:
+                                self.__node_selection.append(self.__current_node)
 
-                    if self.hideout_menu.responses == 'Q':
-                        break
+                        self.__current_node = self.__current_node.next
 
-            else:
-                if self.loop:
-                    self.clear_terminal()
-                    self.restart_menu.draw()
                 else:
-                    break
+                    if self.loop:
+                        self.clear_terminal()
+                        self.restart_menu.draw()
+                    else:
+                        break
+                    
+            except KeyboardInterrupt:
+                # Loop to prevent user from further triggering another KeyboardInterrupt
+                while True:
+                    try:
+                        self.clear_terminal()
+                        self.hideout_menu.draw()
+                        break
+                    except KeyboardInterrupt:
+                        pass
 
+                if self.hideout_menu.responses == 'Q':
+                    break
 
 class Node:
 
