@@ -202,14 +202,17 @@ class Prompt(CliObject):
             String concatenation of an array object or an array of responses
         """
 
-        response = []
+        responses = []
 
         for r in self.__responses:
 
             if self.options:
-                response.append(str(self.options[r]))
+                if isinstance(r, Command):
+                    responses.append(self.options[r].value)
+                else:
+                    responses.append(self.options[r])
 
-        return ", ".join(response) if string else response
+        return ", ".join(responses) if string else responses
 
     def _verify(self):
 

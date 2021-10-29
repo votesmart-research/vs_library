@@ -120,19 +120,19 @@ class Engine:
 
                     # CTRL + C will trigger the hideout menu
                     
-                        self.__current_node.execute()
+                    self.__current_node.execute()
 
-                        if self.__current_node.acknowledge:
-                            _ = input(textformat.apply("\nPress ENTER to continue.", emphases=['blink'], text_color='magenta'))
+                    if self.__current_node.acknowledge:
+                        _ = input(textformat.apply("\nPress ENTER to continue.", emphases=['blink'], text_color='magenta'))
 
-                        # automatically set next node to the only child
-                        if len(self.__current_node.children) == 1:
-                            self.__current_node.set_next(next(iter(self.__current_node.children.values())))
-                        
-                        if self.__current_node.store and self.__current_node.id != self.__node_selection[-1].id:
-                                self.__node_selection.append(self.__current_node)
+                    # automatically set next node to the only child
+                    if len(self.__current_node.children) == 1:
+                        self.__current_node.set_next(next(iter(self.__current_node.children.values())))
+                    
+                    if self.__current_node.store and self.__current_node.id != self.__node_selection[-1].id:
+                            self.__node_selection.append(self.__current_node)
 
-                        self.__current_node = self.__current_node.next
+                    self.__current_node = self.__current_node.next
 
                 else:
                     if self.loop:
