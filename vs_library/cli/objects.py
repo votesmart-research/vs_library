@@ -207,10 +207,7 @@ class Prompt(CliObject):
         for r in self.__responses:
 
             if self.options:
-                if isinstance(r, Command):
-                    responses.append(self.options[r].value)
-                else:
-                    responses.append(self.options[r])
+                responses.append(str(self.options[r]))
 
         return ", ".join(responses) if string else responses
 
