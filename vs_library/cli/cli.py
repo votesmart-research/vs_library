@@ -94,7 +94,7 @@ class Engine:
         time.sleep(0.5)
         self.clear_terminal()
 
-    def run(self, loop=True):
+    def run(self, loop=False):
         
         """
         Traverses and executes nodes while triggering events pertaining to each node attributes
