@@ -1,6 +1,5 @@
 
 # built-ins
-import sys
 import os
 import time
 
@@ -30,24 +29,17 @@ class Engine:
         A menu that presents the options for the user to restart or quit the application
     """
 
-    def __init__(self, start_node, loop=False):
+    def __init__(self, start_node):
 
         """
         Parameters
         ----------
         start_node : cli.Node
             Starting node of the engine that contains other child nodes
-
-        loop : bool
-            If True, the engine will restart to the first node clearing all selected nodes 
-            else the while loop breaks and exits the applciation
         """
 
         self.__current_node = start_node
         self.__node_selection = [start_node]
-
-        # will trigger restart menu if set to True
-        self.loop = loop
 
         self.hideout_menu = Prompt(textformat.apply("Hideout Menu", emphases=['bold'], text_color='cyan'))
         self.hideout_menu.options = {
@@ -102,9 +94,16 @@ class Engine:
         time.sleep(0.5)
         self.clear_terminal()
 
-    def run(self):
+    def run(self, loop=True):
         
-        """Traverses and executes nodes while triggering events pertaining to each node attributes"""
+        """
+        Traverses and executes nodes while triggering events pertaining to each node attributes
+
+        Parameters
+        ----------
+        loop : bool
+            If True, will allow the user to restart the application
+        """
 
         while True:
             try:
@@ -135,9 +134,12 @@ class Engine:
                     self.__current_node = self.__current_node.next
 
                 else:
-                    if self.loop:
+                    if loop:
                         self.clear_terminal()
                         self.restart_menu.draw()
+
+                        if self.restart_menu.responses == '2':
+                            break
                     else:
                         break
                     
