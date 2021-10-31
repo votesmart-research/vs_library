@@ -93,39 +93,39 @@ class Command(CliObject):
 
 class Display(CliObject):
 
-    """
-    The Display class is a CliObject that diplays messages on the command line
-    
-    Attributes
-    ----------
-    format_dict : dict
-        A dictionary containing parameters to format a string variable utilizing
-        the str.format() method
-    """
+    """The Display class is a CliObject that diplays messages on the command line"""
 
-    def __init__(self, message, command=None):
+    def __init__(self, message, format_dict=None, command=None):
         
         """
         Parameters
         ----------
         message : str
             A string to be printed on the terminal when object is drawn
+
+        format_dict : dict, default=None
+            A dictionary containing parameters to format a string variable utilizing
+            the str.format() method
         """
 
         super().__init__(name='display', command=command, exe_seq='after')
 
         self.message = message
-        self.format_dict = None
+        self.format_dict = format_dict if format_dict else dict()
 
     def draw(self):
-        if self.format_dict:
-            print(self.message.format(**self.format_dict))
-        else:
-            print(self.message)
+
+        print(str(self))
 
     def execute(self):
         if isinstance(self.command, Command):
             self.command.execute()
+
+    def __str__(self):
+        if self.format_dict:
+            return self.message.format(**self.format_dict)
+        else:
+            return self.message
 
 
 class Prompt(CliObject):
