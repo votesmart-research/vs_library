@@ -287,7 +287,7 @@ class Prompt(CliObject):
         if self.options:
             for r in set(self.__responses):
                 r = r.strip()
-                if isinstance(self.options[r], Command):
+                if isinstance(self.options[r], CliObject):
                     self.options[r].execute()
 
     def execute(self):
