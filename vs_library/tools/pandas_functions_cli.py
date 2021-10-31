@@ -1,6 +1,5 @@
 
 # built-ins
-from os import terminal_size
 from tkinter import Tk, filedialog
 
 # internal packages
@@ -181,23 +180,30 @@ class PMMainMenu(NodeBundle):
         name = "pandasmatcher_main-menu"
         
         # OBJECTS
-        self.__display_0 = Display("PandasMatcher Main Menu")
-        self.__prompt_0 = Prompt("Choose the following")
+        self.__display_0 = Display(textformat.apply("Pandas Matcher Main Menu", emphases=['bold', 'underline']))
+        self.__prompt_0 = Prompt("Choose the following:")
 
         # NODES
         self.__entry_node = Node(self.__display_0, name=f'{name}_first-node',
-                                 show_hideout=True)
+                                 show_hideout=True, clear_screen=True)
         self.__node_0 = Node(self.__prompt_0, name=f'{name}_choose', parent=self.__entry_node,
                              store=False)
 
-        self.__bundle_0 = PMSetColumnThreshold(pandas_matcher, parent=self.__node_0)
-        self.__bundle_1 = PMSetColumnsToMatch(pandas_matcher, parent=self.__node_0)
-        self.__bundle_2 = PMSetColumnsToGet(pandas_matcher, parent=self.__node_0)
-        self.__bundle_3 = PMAdditionalSettings(pandas_matcher, parent=self.__node_0)
-        self.__bundle_4 = PMCommenceMatch(pandas_matcher, parent=self.__node_0)
+        self.__bundle_0 = PMSetColumnThreshold(pandas_matcher, parent=self.__entry_node)
+        self.__bundle_1 = PMSetColumnsToMatch(pandas_matcher, parent=self.__entry_node)
+        self.__bundle_2 = PMSetColumnsToGet(pandas_matcher, parent=self.__entry_node)
+        self.__bundle_3 = PMAdditionalSettings(pandas_matcher, parent=self.__entry_node)
+        self.__bundle_4 = PMCommenceMatch(pandas_matcher, parent=self.__entry_node)
 
         self.__exit_node = DecoyNode(name=f'{name}_last-node')
 
+        self.__node_0.adopt(self.__bundle_0.entry_node)
+        self.__node_0.adopt(self.__bundle_1.entry_node)
+        self.__node_0.adopt(self.__bundle_2.entry_node)
+        self.__node_0.adopt(self.__bundle_3.entry_node)
+        self.__node_0.adopt(self.__bundle_4.entry_node)
+
+        self.__entry_node.set_next(self.__node_0)
         self.__bundle_4.adopt_node(self.__exit_node)
 
     
@@ -243,7 +249,8 @@ class PMSetColumnThreshold(NodeBundle):
                              store=False)
         self.__node_1 = Node(self.__prompt_1, name=f'{name}_change', parent=self.__node_0,
                              store=False)
-        self.__node_2 = Node(self.__prompt_2, name=f'{name}_set-another', parent=self.__node_1)
+        self.__node_2 = Node(self.__prompt_2, name=f'{name}_set-another', parent=self.__node_1,
+                             store=False)
 
         self.__exit_node = DecoyNode()
 
@@ -301,7 +308,7 @@ class PMSetColumnThreshold(NodeBundle):
 class PMSetColumnsToMatch(NodeBundle):
     def __init__(self, pandas_matcher, parent=None):
 
-        name = "pandas-matcher_column-to-match"
+        name = "pandas-matcher_set-column-match"
         self.pandas_matcher = pandas_matcher
         
         # OBJECTS
@@ -310,13 +317,12 @@ class PMSetColumnsToMatch(NodeBundle):
         
         # NODES
         self.__entry_node = Node(self.__table_0, name=name)
-        self.__node_0 = Node(self.__prompt_0, name=f"{name}_select-change", parent=self.__entry_node)
+        self.__node_0 = Node(self.__prompt_0, name=f"{name}_select-change", parent=self.__entry_node,
+                             store=False)
         self.__exit_node = DecoyNode(name=f"{name}_last-node", parent=self.__node_0)
 
-        super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
-
-        self.__bundle_0 = _PMToMatch(pandas_matcher, self.__entry_node, parent=self.__node_0)
-        self.__bundle_1 = _PMMatchWith(pandas_matcher, self.__entry_node, parent=self.__node_0)
+        self.__bundle_0 = _PMToMatch(pandas_matcher, self.__table_0, self.__entry_node, parent=self.__node_0)
+        self.__bundle_1 = _PMMatchWith(pandas_matcher, self.__table_0, self.__entry_node, parent=self.__node_0)
 
         # CONFIGURATIONS
         self.__prompt_0.options = {
@@ -334,30 +340,30 @@ class PMSetColumnsToMatch(NodeBundle):
             self.__node_0.adopt(parent.entry_node)
             self.__prompt_0.options['R'] = Command(lambda: self.__node_0.set_next(parent.entry_node), value='Return')
 
+        super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
+
     def _populate_table(self):
         self.__table_0.clear()
-        print(self.pandas_matcher.columns_to_match)
         for column, match_with in self.pandas_matcher.columns_to_match.items():
             self.__table_0.table.append([column, ", ".join(match_with)])
 
 
 class _PMToMatch(NodeBundle):
 
-    def __init__(self, pandas_matcher, return_node, parent=None):
+    def __init__(self, pandas_matcher, full_table, return_node, parent=None):
 
-        name = ""
+        name = "pandas-matcher_to-match"
         self.pandas_matcher = pandas_matcher
         
         # OBJECTS
-        self.__table_0 = Table([["Columns to match"]], command=Command(self._populate_table))
-        self.__prompt_0 = Prompt("Select the following action")
+        self.__prompt_0 = Prompt("Select the following action:")
         self.__prompt_1 = Prompt("Which column would you like to add?", multiple_selection=True,
                                  command=Command(self._populate_prompt_add))
         self.__prompt_2 = Prompt("Which column would you like to remove?", multiple_selection=True, 
                                  command=Command(self._populate_prompt_remove))
 
         # NODES
-        self.__entry_node = Node(self.__table_0, name=name,
+        self.__entry_node = Node(full_table, name=name,
                                  store=False)
         self.__node_0 = Node(self.__prompt_0, name=f"{name}_select-action", parent=self.__entry_node)
         self.__node_1 = Node(self.__prompt_1, name=f"{name}_add-col", parent=self.__node_0)
@@ -380,10 +386,6 @@ class _PMToMatch(NodeBundle):
 
         super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
 
-    def _populate_table(self):
-        self.__table_0.clear()
-        self.__table_0.table+=[[column] for column, _ in self.pandas_matcher.columns_to_match.items()]
-    
     def _populate_prompt_add(self):
 
         self.__prompt_1.options.clear()
@@ -420,42 +422,43 @@ class _PMToMatch(NodeBundle):
 
 class _PMMatchWith(NodeBundle):
 
-    def __init__(self, pandas_matcher, return_node, parent=None):
+    def __init__(self, pandas_matcher, full_table, return_node, parent=None):
 
-        name = ""
+        name = "pandas-matcher_match-with"
         self.pandas_matcher = pandas_matcher
-        
+
         # OBJECTS
-        self.__prompt_0 = Prompt("Select a column to match", 
+        self.__prompt_0 = Prompt("Select a column in 'Columns to Match'", 
                                  command=Command(lambda: self._populate_prompt(return_node)))
-        self.__table_0 = Table([["Columns to match with"]],
-                                command=Command(self._populate_table))
-        self.__prompt_1 = Prompt("Select the following action")
+        self.__table_0 = Table([['Columns to Match', 'Match With']],
+                               command=Command(self._populate_table))
+        self.__prompt_1 = Prompt("Select the following action:")
         self.__prompt_2 = Prompt("Which column would you like to add?", multiple_selection=True,
                                  command=Command(self._populate_prompt_add))
         self.__prompt_3 = Prompt("Which column would you like to remove?",multiple_selection=True,
                                  command=Command(self._populate_prompt_remove))
         
         # NODES
-        self.__entry_node = Node(self.__prompt_0, name=f"{name}_select-column")
-        self.__node_0 = Node(self.__table_0, name=f"{name}_match-with", parent=self.__entry_node)
-        self.__node_1 = Node(self.__prompt_1, name=f"{name}_select-action", parent=self.__node_0)
-        self.__node_2 = Node(self.__prompt_2, name=f"{name}_add-col", parent=self.__node_1)
-        self.__node_3 = Node(self.__prompt_3, name=f"{name}_remove-col", parent=self.__node_1)
+        self.__entry_node = Node(full_table)
+        self.__node_0 = Node(self.__prompt_0, name=f"{name}_select-column", parent=self.__entry_node)
+        self.__node_1 = Node(self.__table_0, name=f"{name}_match-with", parent=self.__node_0)
+        self.__node_2 = Node(self.__prompt_1, name=f"{name}_select-action", parent=self.__node_1)
+        self.__node_3 = Node(self.__prompt_2, name=f"{name}_add-col", parent=self.__node_2)
+        self.__node_4 = Node(self.__prompt_3, name=f"{name}_remove-col", parent=self.__node_2)
         self.__exit_node = DecoyNode()
 
-        self.__entry_node.adopt(return_node)
-        self.__node_1.adopt(self.__entry_node)
-        self.__node_2.adopt(self.__node_0)
-        self.__node_3.adopt(self.__node_0)
+        self.__node_0.adopt(return_node)
+        self.__node_2.adopt(self.__entry_node)
+        self.__node_3.adopt(self.__node_1)
+        self.__node_4.adopt(self.__node_1)
 
         # CONFIGURATIONS
         self.__prompt_0.exe_seq = 'before'
 
         self.__prompt_1.options = {
-            '1': Command(lambda: self.__node_1.set_next(self.__node_2), value="Add columns"),
-            '2': Command(lambda: self.__node_1.set_next(self.__node_3), value="Remove columns"),
-            'R': Command(lambda: self.__node_1.set_next(self.__entry_node), value='Return')
+            '1': Command(lambda: self.__node_2.set_next(self.__node_3), value="Add columns"),
+            '2': Command(lambda: self.__node_2.set_next(self.__node_4), value="Remove columns"),
+            'R': Command(lambda: self.__node_2.set_next(self.__entry_node), value='Return')
         }
 
         self.__prompt_2.exe_seq = 'before'
@@ -470,16 +473,16 @@ class _PMMatchWith(NodeBundle):
         columns_to = self.pandas_matcher.columns_to_match.keys()
 
         for index, column in enumerate(columns_to, 1):
-            self.__prompt_0.options[str(index)] = Command(lambda: self.__entry_node.set_next(self.__node_0), value=column)
+            self.__prompt_0.options[str(index)] = Command(lambda: self.__node_0.set_next(self.__node_1), value=column)
 
-        self.__prompt_0.options['R'] = Command(lambda: self.__entry_node.set_next(return_node), value="Return")
+        self.__prompt_0.options['R'] = Command(lambda: self.__node_0.set_next(return_node), value="Return")
 
     def _populate_table(self):
 
         self.__table_0.clear()
         chosen_column = self.__prompt_0.option_responses()
 
-        self.__table_0.table += [[c] for c in self.pandas_matcher.columns_to_match[chosen_column]]
+        self.__table_0.table += [[chosen_column, ", ".join(self.pandas_matcher.columns_to_match[chosen_column])]]
 
     def _populate_prompt_add(self):
 
@@ -493,7 +496,7 @@ class _PMMatchWith(NodeBundle):
         for index, column in enumerate(columns_not_added, 1):
             self.__prompt_2.options[str(index)] = Command(lambda column=column: columns.append(column), value=column)
         
-        self.__prompt_2.options['R'] = Command(lambda: self.__node_2.set_next(self.__node_0), value="Return")
+        self.__prompt_2.options['R'] = Command(lambda: self.__node_3.set_next(self.__node_1), value="Return")
 
     def _populate_prompt_remove(self):
 
@@ -504,27 +507,80 @@ class _PMMatchWith(NodeBundle):
         columns = self.pandas_matcher.columns_to_match[chosen_column]
 
         for index, column in enumerate(columns, 1):
-            self.__prompt_3.options[str(index)] = Command(lambda index=index-1: columns.pop(index), value=column)
+            self.__prompt_3.options[str(index)] = Command(lambda column=column: columns.remove(column), value=column)
         
-        self.__prompt_3.options['R'] = Command(lambda: self.__node_3.set_next(self.__node_0), value="Return")
+        self.__prompt_3.options['R'] = Command(lambda: self.__node_4.set_next(self.__node_1), value="Return")
 
 
 class PMSetColumnsToGet(NodeBundle):
     def __init__(self, pandas_matcher, parent=None):
 
-        name = ""
+        name = "pandas-matcher_set-columns-get"
         self.pandas_matcher = pandas_matcher
         
         # OBJECTS
+        self.__table_0 = Table([['Columns to Get']],
+                               command=Command(self._populate_table))
+        self.__prompt_0 = Prompt("Select the following action:")
+        self.__prompt_1 = Prompt("What column would you like to add?",
+                                 command=Command(self._populate_prompt_add))
+        self.__prompt_2 = Prompt("What column would you like to remove?",
+                                 command=Command(self._populate_prompt_remove))
 
         # NODES
-        self.__entry_node = Node(Display('test'))
+        self.__entry_node = Node(self.__table_0, name=f"{name}_columns")
+        self.__node_0 = Node(self.__prompt_0, name=f"{name}_select-action", parent=self.__entry_node)
+        self.__node_1 = Node(self.__prompt_1, name=f"{name}_add-column", parent=self.__node_0)
+        self.__node_2 = Node(self.__prompt_2, name=f"{name}_remove-column", parent=self.__node_0)
         self.__exit_node = DecoyNode()
 
+        self.__node_1.adopt(self.__entry_node)
+        self.__node_2.adopt(self.__entry_node)
+
         # CONFIGURATIONS
+        self.__prompt_1.exe_seq = 'before'
+        self.__prompt_2.exe_seq = 'before'
+
+        self.__prompt_0.options = {
+            '1': Command(lambda: self.__node_0.set_next(self.__node_1), value="Add columns"),
+            '2': Command(lambda: self.__node_0.set_next(self.__node_2), value="Remove columns")
+        }
+
+        if isinstance(parent, Node):
+            self.__node_0.adopt(parent)
+            self.__prompt_0.options ['R'] = Command(lambda: self.__node_0.set_next(parent), value="Return")
+        elif isinstance(parent, NodeBundle):
+            self.__node_0.adopt(parent.entry_node)
+            self.__prompt_0.options ['R'] = Command(lambda: self.__node_0.set_next(parent.entry_node), value="Return")
 
         super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
 
+    def _populate_table(self):
+        self.__table_0.clear()
+        for column in self.pandas_matcher.columns_to_get:
+            self.__table_0.table.append([column])
+
+    def _populate_prompt_add(self):
+        self.__prompt_1.options.clear()
+
+        columns = self.pandas_matcher.columns_to_get
+        columns_not_added = [c for c in self.pandas_matcher.df_from.columns if c not in columns]
+
+        for index, column in enumerate(columns_not_added, 1):
+            self.__prompt_1.options[str(index)] = Command(lambda column=column: columns.append(column), value=column)
+
+        self.__prompt_1.options['R'] = Command(lambda: self.__node_1.set_next(self.__node_0), value="Return")
+
+    def _populate_prompt_remove(self):
+        
+        self.__prompt_2.options.clear()
+        columns = self.pandas_matcher.columns_to_get
+
+        for index, column in enumerate(columns, 1):
+            self.__prompt_2.options[str(index)] = Command(lambda column=column: columns.remove(column), value=column)
+
+        self.__prompt_2.options['R'] = Command(lambda: self.__node_2.set_next(self.__node_0), value="Return")
+        
 
 class PMAdditionalSettings(NodeBundle):
     def __init__(self, pandas_matcher, parent=None):
