@@ -193,8 +193,8 @@ class Prompt(CliObject):
         
         Parameters
         ---------
-        string : bool
-            If True, will return a string else an array
+        string : bool, default=True
+            Change the return variable to a string, will return a list if False
         
         Returns
         -------
