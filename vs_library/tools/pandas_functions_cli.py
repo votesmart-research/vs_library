@@ -222,9 +222,9 @@ class PMSettings(NodeBundle):
         self.__entry_node.set_next(self.__node_0)
     
         # CONFIGURATION
-        format_threshold = textformat.apply(str(self.pandas_matcher.required_threshold), emphases=['bold','italic'])
-        self.__format_yes = textformat.apply("YES", emphases=['bold', 'italic'], text_color='bright_green')
-        self.__format_no = textformat.apply("NO", emphases=['bold', 'italic'], text_color='bright_red')
+        format_threshold = textformat.apply(str(self.pandas_matcher.required_threshold), emphases=['bold', 'underline'])
+        self.__format_yes = textformat.apply("YES", emphases=['bold', 'italic'], text_color='bright_red')
+        self.__format_no = textformat.apply("NO", emphases=['bold', 'italic'], text_color='bright_green')
 
         self.__prompt_0.options = {
             '1': Command(lambda: self.__node_0.set_next(self.__bundle_0.entry_node), value="Set Column Threshold"),
@@ -241,10 +241,10 @@ class PMSettings(NodeBundle):
 
         if isinstance(parent, Node):
             self.__node_0.adopt(parent)
-            self.__prompt_0.options['R'] = Command(self.__node_0.set_next(parent), value="Return")
+            self.__prompt_0.options['R'] = Command(lambda: self.__node_0.set_next(parent), value="Return")
         elif isinstance(parent, NodeBundle):
             self.__node_0.adopt(parent.entry_node)
-            self.__prompt_0.options['R'] = Command(self.__node_0.set_next(parent.entry_node), value="Return")
+            self.__prompt_0.options['R'] = Command(lambda: self.__node_0.set_next(parent.entry_node), value="Return")
         
         super().__init__(self.__entry_node, self.__exit_node, name=name, parent=parent)
     
@@ -258,7 +258,7 @@ class PMSettings(NodeBundle):
 
     def _set_threshold(self):
         self.pandas_matcher.required_threshold = float(self.__prompt_1.responses)
-        format_threshold = textformat.apply(str(self.pandas_matcher.required_threshold), emphases=['bold','italic'])
+        format_threshold = textformat.apply(str(self.pandas_matcher.required_threshold), emphases=['bold', 'underline'])
         self.__prompt_0.options['5'].format_dict = {'value': format_threshold}
 
 
@@ -607,71 +607,3 @@ class PMSetColumnsToGet(NodeBundle):
 
         self.__prompt_2.options['R'] = Command(lambda: self.__node_2.set_next(self.__node_0), value="Return")
         
-
-class PMCommenceMatch(NodeBundle):
-    def __init__(self, pandas_matcher, parent=None):
-
-        name = "pandas-matcher_commence-match"
-        self.pandas_matcher = pandas_matcher
-
-        self.__df = None
-        self.__match_info = None
-        
-        # OBJECTS
-        self.__display_0 = Display("Begin match...", command=Command(self._execute))
-        self.__table_0 = Table([], header=False)
-
-        # NODES
-        self.__entry_node = Node(self.__display_0)
-        self.__node_0 = Node(self.__table_0, parent=self.__entry_node,
-                             acknowledge=True, store=False)
-        self.__exit_node = DecoyNode(name=f"{name}_exit", parent=self.__node_0)
-
-        # CONFIGURATIONS
-        self.__table_0.table_header = "Match Results"
-        self.__table_0.description = "Above shows the results of the match"
-
-        super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
-
-    def _execute(self):
-        df , match_info = self.pandas_matcher.match()
-
-        self.__df = df
-        self.__match_info = match_info
-
-        for k, v in match_info.items():
-            self.__table_0.table.append([k, str(v)])
-    
-    @property
-    def df(self):
-        df = self.__df
-        self.__df = None
-        return df
-
-    def match_info(self):
-        match_info = self.__match_info
-        self.__match_info = None
-        return match_info
-
-
-class ExportMatchedDf(ExportSpreadsheet):
-
-    """Matched results can be save as a spreadsheet to the user's local host"""
-
-    def __init__(self, df, parent=None):
-
-        """
-        Parameter
-        ---------
-        df : pandas.DataFrame
-            This pandas.DataFrame is the result of the matched ratings worksheet
-        """
-
-        name = 'export-matched-df'
-
-        self.df = df
-        super().__init__(name, parent)
-
-
-    def _execute(self):
-        return super()._execute(df=self.df)
