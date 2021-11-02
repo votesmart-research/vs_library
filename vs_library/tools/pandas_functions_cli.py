@@ -2,10 +2,6 @@
 # built-ins
 from tkinter import Tk, filedialog
 
-from numpy import mat
-import pandas
-from pandas.core.frame import DataFrame
-
 # internal packages
 from . import pandas_functions
 from ..cli import Node, NodeBundle, DecoyNode, textformat
@@ -351,8 +347,8 @@ class PMSetColumnsToMatch(NodeBundle):
 
         # CONFIGURATIONS
         self.__prompt_0.options = {
-            '1': Command(lambda: self.__node_0.set_next(self.__bundle_0.entry_node), value="Columns to match"),
-            '2': Command(lambda: self.__node_0.set_next(self.__bundle_1.entry_node), value="Columns to match with")
+            '1': Command(lambda: self.__node_0.set_next(self.__bundle_0.entry_node), value="Columns to Match"),
+            '2': Command(lambda: self.__node_0.set_next(self.__bundle_1.entry_node), value="Match With")
         }
 
         self.__table_0.table_header = "Set Columns to Match"
