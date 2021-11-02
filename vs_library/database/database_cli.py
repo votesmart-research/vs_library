@@ -1,7 +1,7 @@
 
 # internal packages
 from . import database
-from ..tools import pandas_functions_cli
+from ..tools import pandas_extension_cli
 from ..cli import Node, NodeBundle, DecoyNode, textformat
 from ..cli.objects import Command, Display, Prompt, Table
 
@@ -448,7 +448,7 @@ class QueryExecution(NodeBundle):
             return textformat.apply(message, emphases=['italic'], text_color='red')
 
 
-class ExportQueryResults(pandas_functions_cli.ExportSpreadsheet):
+class ExportQueryResults(pandas_extension_cli.ExportSpreadsheet):
 
     """Query results can be saved to a location on the user's local host"""
 

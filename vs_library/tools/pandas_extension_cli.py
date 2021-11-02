@@ -3,7 +3,7 @@
 from tkinter import Tk, filedialog
 
 # internal packages
-from . import pandas_functions
+from . import pandas_extension
 from ..cli import Node, NodeBundle, DecoyNode, textformat
 from ..cli.objects import Command, Display, Prompt, Table
 
@@ -65,7 +65,7 @@ class ImportSpreadsheet(NodeBundle):
         if function:
             success, message = function(self.__filepath)
         else:
-            self.__df, message = pandas_functions.read_spreadsheet(self.__filepath)
+            self.__df, message = pandas_extension.read_spreadsheet(self.__filepath)
             success = not self.__df.empty
 
         if success:
@@ -140,7 +140,7 @@ class ExportSpreadsheet(NodeBundle):
         if function:
             success, message = function(self.__filepath)
         else:
-            success, message = pandas_functions.to_spreadsheet(df, self.__filepath)
+            success, message = pandas_extension.to_spreadsheet(df, self.__filepath)
 
         if success:
             self.__node_0.set_next(self.__exit_node)

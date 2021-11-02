@@ -10,7 +10,7 @@ import pandas
 import pg8000
 from pg8000.dbapi import ProgrammingError
 
-from ..tools import pandas_functions
+from ..tools import pandas_extension
 
 
 @dataclass
@@ -403,7 +403,7 @@ class QueryTool:
 
         try:
             df = self.results(as_format='pandas_df')
-            success, message = pandas_functions.to_spreadsheet(df, filepath=filepath)
+            success, message = pandas_extension.to_spreadsheet(df, filepath=filepath)
             
             return success, message
             
