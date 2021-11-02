@@ -7,6 +7,7 @@ from collections import defaultdict
 import pandas
 import numpy
 from rapidfuzz import process, fuzz
+from tqdm import tqdm
 
 
 def read_spreadsheet(filepath):
@@ -184,7 +185,7 @@ class PandasMatcher:
         self.column_threshold = defaultdict(float)
         self.columns_to_match = defaultdict(list)
         self.columns_to_get = []
-        self.required_threshold = 75
+        self.required_threshold = 75.0
         self.cutoff = False
 
     @property
@@ -240,8 +241,8 @@ class PandasMatcher:
                 matches = process.extract(row_to[column_to], choices[column_to],
                                           scorer=fuzz.WRatio,
                                           limit=len(self.__df_from),
-                                          score_cutoff=0 if not self.cutoff else self.column_threshold[
-                                                                                     column_to] or 0)
+                                          score_cutoff=0 if not self.cutoff 
+                                                         else self.column_threshold[column_to])
 
                 for _, score, index_from in matches:
                     match_scores[index_from] += score * uniqueness[column_to]
@@ -274,21 +275,19 @@ class PandasMatcher:
 
         scores = []
 
-        summary = {'average_score': 0.0,
-                   'highest_score': 0.0,
-                   'lowest_score': 0.0,
-                   'optimal': 0,
-                   'review': 0,
-                   'total': 0,
-                   'unmatched': 0,
-                   'ambiguous': 0}
-                   
-        for index_to in range(0, len(self.__df_to)):
+        match_info = {'Rows Matched': 0,
+                      'Optimally Matched': 0,
+                      'Needs Review': 0,
+                      'Unmatched': 0,
+                      'Duplicates': 0}
+
+        for index_to in tqdm(range(0, len(self.__df_to))):
 
             match_scores = self._compute_score(choices, index_to, uniqueness)
             top_matches = self._top_matches(match_scores, optimal_threshold)
 
             if len(top_matches) == 1:
+
                 index_from = next(iter(top_matches))
 
                 for column in self.columns_to_get:
@@ -301,25 +300,29 @@ class PandasMatcher:
                 scores.append(top_matches[index_from]['match_score'])
 
                 if top_matches[index_from]['match_status'] == "REVIEW":
-                    summary['review'] += 1
-                elif top_matches[index_from]['match_status'] == "MATCHED":
-                    summary['optimal'] += 1
+                    match_info['Needs Review'] += 1
 
-                summary['total'] += 1
+                elif top_matches[index_from]['match_status'] == "MATCHED":
+                    match_info['Optimally Matched'] += 1
+
+                match_info['Rows Matched'] += 1
 
             elif len(top_matches) > 1:
+
                 df_matched['row_index'] = df_matched['row_index'].astype('object')
                 df_matched.at[index_to, 'row_index'] = ', '.join(list(map(str, top_matches.keys())))
-                df_matched.at[index_to, 'match_status'] = 'AMBIGUOUS'
+                df_matched.at[index_to, 'match_status'] = 'DUPLICATE'
 
-                summary['ambiguous'] += 1
+                match_info['Duplicates'] += 1
 
             else:
                 df_matched.at[index_to, 'match_status'] = 'UNMATCHED'
-                summary['unmatched'] += 1
+                match_info['Unmatched'] += 1
 
-        summary['average_score'] = sum(scores) / len(scores) if scores else 0
-        summary['highest_score'] = max(scores) if scores else -1
-        summary['lowest_match_score'] = min(scores) if scores else -1
+        rows_matched = match_info['Rows Matched']
+        match_info['Match Score'] = f"{round(rows_matched/len(self.__df_to)*100, 2) if rows_matched else 0}%"
+        match_info['Average Match Score'] = f"{round(sum(scores)/len(scores), 2) if scores else 0}%"
+        match_info['Highest Match Score'] = f"{round(max(scores), 2) if scores else -1}%"
+        match_info['Lowest Match Score'] = f"{round(min(scores), 2) if scores else -1}%"
 
-        return df_matched, summary
+        return df_matched, match_info

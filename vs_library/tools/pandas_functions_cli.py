@@ -2,6 +2,10 @@
 # built-ins
 from tkinter import Tk, filedialog
 
+from numpy import mat
+import pandas
+from pandas.core.frame import DataFrame
+
 # internal packages
 from . import pandas_functions
 from ..cli import Node, NodeBundle, DecoyNode, textformat
@@ -172,49 +176,67 @@ class ExportSpreadsheet(NodeBundle):
             self.__entry_node.acknowledge = False
             self.__entry_node.set_next(self.__node_0)
 
+def _verify_threshold(t):
+    try:
+        if float(t)>=0 and float(t)<=100:
+            return True
+        else:
+            return False, "Enter a number between 0 to 100, as this denotes percentage."
+    except:
+        return False, "Enter a number between 0 to 100, as this denotes percentage."
 
-class PMMainMenu(NodeBundle):
+
+class PMSettings(NodeBundle):
 
     def __init__(self, pandas_matcher, parent=None):
 
-        name = "pandasmatcher_main-menu"
+        name = "pandasmatcher-settings"
+        self.pandas_matcher = pandas_matcher
         
         # OBJECTS
-        self.__display_0 = Display(textformat.apply("Pandas Matcher Main Menu", emphases=['bold', 'underline']))
+        self.__display_0 = Display(textformat.apply("Pandas Matcher Settings", emphases=['bold', 'underline']))
         self.__prompt_0 = Prompt("Choose the following:")
+        self.__prompt_1 = Prompt("Enter new threshold between 0 to 100", verification=_verify_threshold,
+                                 command=Command(self._set_threshold))
 
         # NODES
         self.__entry_node = Node(self.__display_0, name=f'{name}_first-node',
                                  show_hideout=True, clear_screen=True)
         self.__node_0 = Node(self.__prompt_0, name=f'{name}_choose', parent=self.__entry_node,
                              store=False)
+        self.__node_1 = Node(self.__prompt_1, parent=self.__node_0,
+                             store=False)
 
         self.__bundle_0 = PMSetColumnThreshold(pandas_matcher, parent=self.__entry_node)
         self.__bundle_1 = PMSetColumnsToMatch(pandas_matcher, parent=self.__entry_node)
         self.__bundle_2 = PMSetColumnsToGet(pandas_matcher, parent=self.__entry_node)
-        self.__bundle_3 = PMAdditionalSettings(pandas_matcher, parent=self.__entry_node)
-        self.__bundle_4 = PMCommenceMatch(pandas_matcher, parent=self.__entry_node)
 
         self.__exit_node = DecoyNode(name=f'{name}_last-node')
 
+        self.__node_0.adopt(self.__entry_node)
         self.__node_0.adopt(self.__bundle_0.entry_node)
         self.__node_0.adopt(self.__bundle_1.entry_node)
         self.__node_0.adopt(self.__bundle_2.entry_node)
-        self.__node_0.adopt(self.__bundle_3.entry_node)
-        self.__node_0.adopt(self.__bundle_4.entry_node)
+        self.__node_1.adopt(self.__entry_node)
 
         self.__entry_node.set_next(self.__node_0)
-        self.__bundle_4.adopt_node(self.__exit_node)
-
     
         # CONFIGURATION
+        format_threshold = textformat.apply(str(self.pandas_matcher.required_threshold), emphases=['bold','italic'])
+        self.__format_yes = textformat.apply("YES", emphases=['bold', 'italic'], text_color='bright_green')
+        self.__format_no = textformat.apply("NO", emphases=['bold', 'italic'], text_color='bright_red')
 
         self.__prompt_0.options = {
             '1': Command(lambda: self.__node_0.set_next(self.__bundle_0.entry_node), value="Set Column Threshold"),
             '2': Command(lambda: self.__node_0.set_next(self.__bundle_1.entry_node), value="Set Columns To Match"),
             '3': Command(lambda: self.__node_0.set_next(self.__bundle_2.entry_node), value="Set Columns to Get"),
-            '4': Command(lambda: self.__node_0.set_next(self.__bundle_3.entry_node), value="Additional Settings"),
-            'M': Command(lambda: self.__node_0.set_next(self.__bundle_4.entry_node), value="Commence Match"),
+            '4': Display("Toggle Cutoff: {status}", format_dict={'status': self.__format_yes if pandas_matcher.cutoff 
+                                                                  else self.__format_no},
+                                                     command=Command(self._toggle_cutoff,
+                                                     command=Command(lambda: self.__node_0.set_next(self.__entry_node)))),
+
+            '5': Display("Required Threshold: {value}", format_dict={'value': format_threshold},
+                         command=Command(lambda: self.__node_0.set_next(self.__node_1)))
         }
 
         if isinstance(parent, Node):
@@ -225,6 +247,19 @@ class PMMainMenu(NodeBundle):
             self.__prompt_0.options['R'] = Command(self.__node_0.set_next(parent.entry_node), value="Return")
         
         super().__init__(self.__entry_node, self.__exit_node, name=name, parent=parent)
+    
+    def _toggle_cutoff(self):
+        self.pandas_matcher.cutoff = not self.pandas_matcher.cutoff
+
+        if self.pandas_matcher.cutoff:
+            self.__prompt_0.options['4'].format_dict['status'] = self.__format_yes
+        else:
+            self.__prompt_0.options['4'].format_dict['status'] = self.__format_no
+
+    def _set_threshold(self):
+        self.pandas_matcher.required_threshold = float(self.__prompt_1.responses)
+        format_threshold = textformat.apply(str(self.pandas_matcher.required_threshold), emphases=['bold','italic'])
+        self.__prompt_0.options['5'].format_dict = {'value': format_threshold}
 
 
 class PMSetColumnThreshold(NodeBundle):
@@ -236,9 +271,9 @@ class PMSetColumnThreshold(NodeBundle):
         
         # OBJECTS
         self.__table_0 = Table([['Options', 'Column', 'Threshold']], command=Command(self._populate_table))
-        self.__prompt_0 = Prompt("Select a column by the options", verification=self._verfiy_selection)
+        self.__prompt_0 = Prompt("Select a column by the options", verification=self._verify_selection)
         self.__prompt_1 = Prompt("What is the threshold you would like to change to?", 
-                                 verification=self._verify_threshold, command=Command(self._execute))
+                                 verification=_verify_threshold, command=Command(self._execute))
         self.__prompt_2 = Prompt("Do you want to set another threshold?")
 
         # NODES
@@ -274,13 +309,13 @@ class PMSetColumnThreshold(NodeBundle):
 
     def _execute(self):
         r = int(self.__prompt_0.responses)
-        new_threshold = self.__prompt_1.responses
+        new_threshold = float(self.__prompt_1.responses)
 
         if r and new_threshold:
             column = dict(enumerate(self.pandas_matcher.column_threshold, 1))[int(r)]
             self.pandas_matcher.column_threshold[column] = new_threshold
 
-    def _verfiy_selection(self, s):
+    def _verify_selection(self, s):
         try:
             if int(s) in dict(enumerate(self.pandas_matcher.column_threshold, 1)).keys():
                 return True
@@ -288,16 +323,6 @@ class PMSetColumnThreshold(NodeBundle):
                 return False, "Option is not available."
         except:
             return False, "Option is not available."
-
-    @staticmethod
-    def _verify_threshold(t):
-        try:
-            if int(t)>=0 and int(t)<=100:
-                return True
-            else:
-                return False, "Enter a number between 0 to 100, as this denotes percentage."
-        except:
-            return False, "Enter a number between 0 to 100, as this denotes percentage."
 
     def _populate_table(self):
         self.__table_0.clear()
@@ -491,7 +516,7 @@ class _PMMatchWith(NodeBundle):
         chosen_column = self.__prompt_0.option_responses()
 
         columns = self.pandas_matcher.columns_to_match[chosen_column]
-        columns_not_added = [c for c in self.pandas_matcher.df_to.columns if c not in columns]
+        columns_not_added = [c for c in self.pandas_matcher.df_from.columns if c not in columns]
 
         for index, column in enumerate(columns_not_added, 1):
             self.__prompt_2.options[str(index)] = Command(lambda column=column: columns.append(column), value=column)
@@ -522,13 +547,14 @@ class PMSetColumnsToGet(NodeBundle):
         self.__table_0 = Table([['Columns to Get']],
                                command=Command(self._populate_table))
         self.__prompt_0 = Prompt("Select the following action:")
-        self.__prompt_1 = Prompt("What column would you like to add?",
+        self.__prompt_1 = Prompt("What column would you like to add?", multiple_selection=True,
                                  command=Command(self._populate_prompt_add))
-        self.__prompt_2 = Prompt("What column would you like to remove?",
+        self.__prompt_2 = Prompt("What column would you like to remove?", multiple_selection=True,
                                  command=Command(self._populate_prompt_remove))
 
         # NODES
-        self.__entry_node = Node(self.__table_0, name=f"{name}_columns")
+        self.__entry_node = Node(self.__table_0, name=f"{name}_columns",
+                                 clear_screen=True)
         self.__node_0 = Node(self.__prompt_0, name=f"{name}_select-action", parent=self.__entry_node)
         self.__node_1 = Node(self.__prompt_1, name=f"{name}_add-column", parent=self.__node_0)
         self.__node_2 = Node(self.__prompt_2, name=f"{name}_remove-column", parent=self.__node_0)
@@ -582,36 +608,70 @@ class PMSetColumnsToGet(NodeBundle):
         self.__prompt_2.options['R'] = Command(lambda: self.__node_2.set_next(self.__node_0), value="Return")
         
 
-class PMAdditionalSettings(NodeBundle):
-    def __init__(self, pandas_matcher, parent=None):
-
-        name = ""
-        self.pandas_matcher = pandas_matcher
-        
-        # OBJECTS
-
-        # NODES
-        self.__entry_node = Node(Display('test'))
-        self.__exit_node = DecoyNode()
-
-        # CONFIGURATIONS
-
-        super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
-
-
 class PMCommenceMatch(NodeBundle):
     def __init__(self, pandas_matcher, parent=None):
 
-        name = ""
+        name = "pandas-matcher_commence-match"
         self.pandas_matcher = pandas_matcher
+
+        self.__df = None
+        self.__match_info = None
         
         # OBJECTS
+        self.__display_0 = Display("Begin match...", command=Command(self._execute))
+        self.__table_0 = Table([], header=False)
 
         # NODES
-        self.__entry_node = Node(Display('test'))
-        self.__exit_node = DecoyNode()
+        self.__entry_node = Node(self.__display_0)
+        self.__node_0 = Node(self.__table_0, parent=self.__entry_node,
+                             acknowledge=True, store=False)
+        self.__exit_node = DecoyNode(name=f"{name}_exit", parent=self.__node_0)
 
         # CONFIGURATIONS
+        self.__table_0.table_header = "Match Results"
+        self.__table_0.description = "Above shows the results of the match"
 
         super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
 
+    def _execute(self):
+        df , match_info = self.pandas_matcher.match()
+
+        self.__df = df
+        self.__match_info = match_info
+
+        for k, v in match_info.items():
+            self.__table_0.table.append([k, str(v)])
+    
+    @property
+    def df(self):
+        df = self.__df
+        self.__df = None
+        return df
+
+    def match_info(self):
+        match_info = self.__match_info
+        self.__match_info = None
+        return match_info
+
+
+class ExportMatchedDf(ExportSpreadsheet):
+
+    """Matched results can be save as a spreadsheet to the user's local host"""
+
+    def __init__(self, df, parent=None):
+
+        """
+        Parameter
+        ---------
+        df : pandas.DataFrame
+            This pandas.DataFrame is the result of the matched ratings worksheet
+        """
+
+        name = 'export-matched-df'
+
+        self.df = df
+        super().__init__(name, parent)
+
+
+    def _execute(self):
+        return super()._execute(df=self.df)
