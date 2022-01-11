@@ -14,7 +14,8 @@ OFFICE = {
         '12': 'Attorney General',
         '44': 'Secretary of State',
         '78': 'Chief Justice of the Supreme Court',
-        '79': 'Justice of the Supreme Court'
+        '79': 'Justice of the Supreme Court',
+        '390': 'Delegate'
     }
 
 # Key-value pair between officetype_id and type of office from the 'officetype' table
@@ -68,18 +69,18 @@ FINSOURCE = {
 # Key-value pair between state abbreviation and state name from the 'state' table
 # Queried from: SELECT state_id, name FROM state
 STATE = {
-    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
+    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'AS':'American Samoa',
     'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
-    'DC': 'District of Columbia', 'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii',
+    'DC': 'District of Columbia', 'FL': 'Florida', 'GA': 'Georgia', 'GU': 'Guam','HI': 'Hawaii',
     'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
     'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine',
     'MD': 'Maryland', 'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota',
     'MS': 'Mississippi', 'MO': 'Missouri', 'MT': 'Montana',
     'MH': 'Marshall Islands', 'NA': 'National', 'NE': 'Nebraska', 'NV': 'Nevada',
-    'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+    'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NMI': 'Northern Mariana Islands', 'NY': 'New York',
     'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
-    'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island',
+    'OR': 'Oregon', 'PA': 'Pennsylvania', 'PR': 'Puerto Rico','RI': 'Rhode Island',
     'SC': 'South Carolina', 'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas',
-    'UT': 'Utah', 'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington',
+    'UT': 'Utah', 'VI': 'Virgin Islands' ,'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington',
     'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming'
 }
