@@ -591,7 +591,7 @@ class PMSetColumnsToGet(NodeBundle):
         for index, column in enumerate(columns_not_added, 1):
             self.__prompt_1.options[str(index)] = Command(lambda column=column: columns.append(column), value=column)
 
-        self.__prompt_1.options['R'] = Command(lambda: self.__node_1.set_next(self.__node_0), value="Return")
+        self.__prompt_1.options['R'] = Command(lambda: self.__node_1.set_next(self.__entry_node), value="Return")
 
     def _populate_prompt_remove(self):
         
@@ -601,5 +601,5 @@ class PMSetColumnsToGet(NodeBundle):
         for index, column in enumerate(columns, 1):
             self.__prompt_2.options[str(index)] = Command(lambda column=column: columns.remove(column), value=column)
 
-        self.__prompt_2.options['R'] = Command(lambda: self.__node_2.set_next(self.__node_0), value="Return")
+        self.__prompt_2.options['R'] = Command(lambda: self.__node_2.set_next(self.__entry_node), value="Return")
         
