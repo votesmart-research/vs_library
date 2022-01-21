@@ -1,6 +1,6 @@
-odfpy
 pandas
 pg8000
+odfpy
 rapidfuzz
 python-Levenshtein
 tabulate
