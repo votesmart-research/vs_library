@@ -15,6 +15,7 @@ class Incumbents:
         candidate.suffix,
         office.name as office,
         state.name as state,
+        state.state_id as state_id,
         districtname.name as district,
         party.name as party
 
@@ -90,29 +91,29 @@ class Incumbents:
         statement = \
             '''
             WHERE (
-                (:year BETWEEN EXTRACT(year FROM to_date(firstelect, 'mm/dd/yyyy'))
-                           AND EXTRACT(year FROM to_date(lastelect, 'mm/dd/yyyy'))            
-                AND EXTRACT(year FROM to_date(firstelect, 'mm/dd/yyyy')) > 1000)
+                (:year BETWEEN EXTRACT(year FROM to_date(termstart, 'mm/dd/yyyy'))
+                           AND EXTRACT(year FROM to_date(termend, 'mm/dd/yyyy'))            
+                AND EXTRACT(year FROM to_date(termstart, 'mm/dd/yyyy')) > 1000)
             OR
-                (:year BETWEEN EXTRACT(year FROM to_date(firstelect,'mm/yyyy'))
-                           AND EXTRACT(year FROM to_date(lastelect, 'mm/yyyy'))
-                AND EXTRACT(year FROM to_date(firstelect, 'mm/yyyy')) > 1000)
+                (:year BETWEEN EXTRACT(year FROM to_date(termstart,'mm/yyyy'))
+                           AND EXTRACT(year FROM to_date(termend, 'mm/yyyy'))
+                AND EXTRACT(year FROM to_date(termstart, 'mm/yyyy')) > 1000)
             OR
-                (:year BETWEEN EXTRACT(year FROM to_date(firstelect,'yyyy'))
-                           AND EXTRACT(year FROM to_date(lastelect, 'yyyy'))
-                AND EXTRACT(year FROM to_date(firstelect, 'yyyy')) > 1000)
+                (:year BETWEEN EXTRACT(year FROM to_date(termstart,'yyyy'))
+                           AND EXTRACT(year FROM to_date(termend, 'yyyy'))
+                AND EXTRACT(year FROM to_date(termstart, 'yyyy')) > 1000)
             OR
-                (:year BETWEEN EXTRACT(year FROM to_date(firstelect,'mm/dd/yyyy'))
-                           AND EXTRACT(year FROM CASE WHEN lastelect = '' THEN now() END)
-                AND EXTRACT(year FROM to_date(firstelect, 'mm/dd/yyyy')) > 1000)
+                (:year BETWEEN EXTRACT(year FROM to_date(termstart,'mm/dd/yyyy'))
+                           AND EXTRACT(year FROM CASE WHEN termend ISNULL THEN now() END)
+                AND EXTRACT(year FROM to_date(termstart, 'mm/dd/yyyy')) > 1000)
             OR
-                (:year BETWEEN EXTRACT(year FROM to_date(firstelect,'mm/yyyy'))
-                           AND EXTRACT(year FROM CASE WHEN lastelect = '' THEN now() END)
-                AND EXTRACT(year FROM to_date(firstelect, 'mm/yyyy')) > 1000)
+                (:year BETWEEN EXTRACT(year FROM to_date(termstart,'mm/yyyy'))
+                           AND EXTRACT(year FROM CASE WHEN termend ISNULL THEN now() END)
+                AND EXTRACT(year FROM to_date(termstart, 'mm/yyyy')) > 1000)
             OR
-                (:year BETWEEN EXTRACT(year FROM to_date(firstelect,'yyyy'))
-                           AND EXTRACT(year FROM CASE WHEN lastelect = '' THEN now() END)
-                AND EXTRACT(year FROM to_date(firstelect, 'yyyy')) > 1000)
+                (:year BETWEEN EXTRACT(year FROM to_date(termstart,'yyyy'))
+                           AND EXTRACT(year FROM CASE WHEN termend ISNULL THEN now() END)
+                AND EXTRACT(year FROM to_date(termstart, 'yyyy')) > 1000)
                 )
             AND office_candidate.state_id IN ({states})
             AND (office.office_id IN ({office_ids})
@@ -139,6 +140,7 @@ class ElectionCandidates:
         candidate.suffix,
         office.name as office,
         state.name as state,
+        state.state_id as state,
         districtname.name as district,
         party.name as party
 
