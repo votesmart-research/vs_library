@@ -144,6 +144,7 @@ class Engine:
                         break
                     
             except KeyboardInterrupt:
+                
                 # Loop to prevent user from further triggering another KeyboardInterrupt
                 while True:
                     try:

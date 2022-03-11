@@ -82,7 +82,7 @@ class ImportSpreadsheet(NodeBundle):
                                                                  ".xls .xlsx .xlsm .xlsb .ods .csv .tsv")])
         # to close the file dialog window
         tk.destroy()
-
+        
         if not self.__filepath:
             self.__display_0.command.respond = True
             self.__entry_node.acknowledge = True

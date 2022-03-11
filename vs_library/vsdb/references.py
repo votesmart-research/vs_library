@@ -77,7 +77,7 @@ STATE = {
     'MD': 'Maryland', 'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota',
     'MS': 'Mississippi', 'MO': 'Missouri', 'MT': 'Montana',
     'MH': 'Marshall Islands', 'NA': 'National', 'NE': 'Nebraska', 'NV': 'Nevada',
-    'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NMI': 'Northern Mariana Islands', 'NY': 'New York',
+    'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'MP': 'Northern Mariana Islands', 'NY': 'New York',
     'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
     'OR': 'Oregon', 'PA': 'Pennsylvania', 'PR': 'Puerto Rico','RI': 'Rhode Island',
     'SC': 'South Carolina', 'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas',
