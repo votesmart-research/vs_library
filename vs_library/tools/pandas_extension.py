@@ -192,6 +192,10 @@ class PandasMatcher:
     def df_to(self):
         return self.__df_to
 
+    @property
+    def df_from(self):
+        return self.__df_from
+
     @df_to.setter
     def df_to(self, df):
         self.__df_to = df.astype('string').replace(pandas.NA, '')
@@ -203,10 +207,6 @@ class PandasMatcher:
                 self.columns_to_match[column_to].append(column_to)
             else:
                 self.columns_to_match[column_to] = []
-
-    @property
-    def df_from(self):
-        return self.__df_from
 
     @df_from.setter
     def df_from(self, df):
@@ -279,7 +279,7 @@ class PandasMatcher:
                       'Optimally Matched': 0,
                       'Needs Review': 0,
                       'Unmatched': 0,
-                      'Duplicates': 0}
+                      'Ambiguous': 0}
 
         for index_to in tqdm(range(0, len(self.__df_to))):
 
@@ -311,9 +311,9 @@ class PandasMatcher:
 
                 df_matched['row_index'] = df_matched['row_index'].astype('object')
                 df_matched.at[index_to, 'row_index'] = ', '.join(list(map(str, top_matches.keys())))
-                df_matched.at[index_to, 'match_status'] = 'DUPLICATE'
+                df_matched.at[index_to, 'match_status'] = 'AMBIGUOUS'
 
-                match_info['Duplicates'] += 1
+                match_info['Ambiguous'] += 1
 
             else:
                 df_matched.at[index_to, 'match_status'] = 'UNMATCHED'
@@ -324,5 +324,8 @@ class PandasMatcher:
         match_info['Average Match Score'] = f"{round(sum(scores)/len(scores), 2) if scores else 0}%"
         match_info['Highest Match Score'] = f"{round(max(scores), 2) if scores else -1}%"
         match_info['Lowest Match Score'] = f"{round(min(scores), 2) if scores else -1}%"
+
+        dupe_index, _ = get_column_dupes(df_matched, 'candidate_id')
+        df_matched.loc[dupe_index, 'match_status'] = "DUPLICATES"
 
         return df_matched, match_info

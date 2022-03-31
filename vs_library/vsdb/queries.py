@@ -140,7 +140,7 @@ class ElectionCandidates:
         candidate.suffix,
         office.name as office,
         state.name as state,
-        state.state_id as state,
+        state.state_id as state_id,
         districtname.name as district,
         party.name as party
 
