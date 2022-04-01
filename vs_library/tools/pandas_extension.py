@@ -221,7 +221,9 @@ class PandasMatcher:
                 self.columns_to_match[column_from].append(column_from)
 
     def _choices(self):
+        
         choices = {}
+
         for column_to, columns_from in self.columns_to_match.items():
             for column_from in columns_from:
                 if column_to not in choices.keys():
@@ -232,6 +234,7 @@ class PandasMatcher:
         return choices
 
     def _compute_score(self, choices, index_to, uniqueness):
+
         match_scores = defaultdict(float)
 
         for column_to, columns_from in self.columns_to_match.items():
@@ -257,6 +260,7 @@ class PandasMatcher:
         top_matches = defaultdict(dict)
 
         for index_from, match_score in filter_highest(match_scores).items():
+
             if round(match_score, 2) >= round(self.required_threshold, 2):
                 match_status = 'REVIEW' if match_score < optimal_threshold else 'MATCHED'
                 top_matches[index_from].update({'match_status': match_status,
@@ -274,12 +278,6 @@ class PandasMatcher:
         df_matched = self.__df_to.copy()
 
         scores = []
-
-        match_info = {'Rows Matched': 0,
-                      'Optimally Matched': 0,
-                      'Needs Review': 0,
-                      'Unmatched': 0,
-                      'Ambiguous': 0}
 
         for index_to in tqdm(range(0, len(self.__df_to))):
 
@@ -299,33 +297,28 @@ class PandasMatcher:
 
                 scores.append(top_matches[index_from]['match_score'])
 
-                if top_matches[index_from]['match_status'] == "REVIEW":
-                    match_info['Needs Review'] += 1
-
-                elif top_matches[index_from]['match_status'] == "MATCHED":
-                    match_info['Optimally Matched'] += 1
-
-                match_info['Rows Matched'] += 1
-
             elif len(top_matches) > 1:
 
                 df_matched['row_index'] = df_matched['row_index'].astype('object')
                 df_matched.at[index_to, 'row_index'] = ', '.join(list(map(str, top_matches.keys())))
                 df_matched.at[index_to, 'match_status'] = 'AMBIGUOUS'
 
-                match_info['Ambiguous'] += 1
-
             else:
                 df_matched.at[index_to, 'match_status'] = 'UNMATCHED'
-                match_info['Unmatched'] += 1
 
-        rows_matched = match_info['Rows Matched']
-        match_info['Match Score'] = f"{round(rows_matched/len(self.__df_to)*100, 2) if rows_matched else 0}%"
-        match_info['Average Match Score'] = f"{round(sum(scores)/len(scores), 2) if scores else 0}%"
-        match_info['Highest Match Score'] = f"{round(max(scores), 2) if scores else -1}%"
-        match_info['Lowest Match Score'] = f"{round(min(scores), 2) if scores else -1}%"
-
-        dupe_index, _ = get_column_dupes(df_matched, 'candidate_id')
+        dupe_index, _ = get_column_dupes(df_matched, 'row_index')
         df_matched.loc[dupe_index, 'match_status'] = "DUPLICATES"
 
-        return df_matched, match_info
+        m_stat = df_matched['match_status'].value_counts()
+
+        m_info = {
+            "Match Scores": f"{round(m_stat['MATCHED']/len(self.__df_to)*100, 2) if m_stat['MATCHED'] else 0}%",
+            "Average Match Score": f"{round(sum(scores)/len(scores), 2) if scores else 0}%",
+            "Highest Match Score": f"{round(max(scores), 2) if scores else -1}%",
+            "Lowest Match Score": f"{round(min(scores), 2) if scores else -1}%"
+            }
+
+        m_info.update(m_stat)
+
+        return df_matched, m_info
+
