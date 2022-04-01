@@ -8,7 +8,7 @@ from ..cli import Node, NodeBundle, DecoyNode, textformat
 from ..cli.objects import Command, Display, Prompt, Table
 
 
-class ImportSpreadsheet(NodeBundle):
+class ImportSpreadsheets(NodeBundle):
 
     """User can interact with a filedialog to import and read a file"""
 
@@ -16,14 +16,14 @@ class ImportSpreadsheet(NodeBundle):
 
         # name is specified in from child class
         name = name
-        self.__filepath = None
-        self.__df = None
+        self.__filepaths = None
+        self.__dfs = []
 
         # OBJECTS
         self.__display_0 = Display("Opening File Dialog...", command=Command(self._filedialog))
         self.__command_0 = Command(self._execute)
         self.__prompt_0 = Prompt("Error reading file: {error}. What would you like to do?")
-        self.__prompt_1 = Prompt("{message}. Would you like to continue?")
+        self.__prompt_1 = Prompt("{message}\nWould you like to continue?")
         
         # NODES
         self.__entry_node = Node(self.__display_0, name=f'{name}_file-dialog', 
@@ -59,31 +59,49 @@ class ImportSpreadsheet(NodeBundle):
 
         super().__init__(self.__entry_node, self.__exit_node, name=name, parent=parent)
 
-    def _execute(self, function=None):
+    def _execute(self, function=None, multiple=False):
+
+        self.__dfs.clear()
 
         # child class might utilize a specific function to read a file
-        if function:
-            success, message = function(self.__filepath)
-        else:
-            self.__df, message = pandas_extension.read_spreadsheet(self.__filepath)
-            success = not self.__df.empty
+        messages = []
+        successes = []
 
-        if success:
-            self.__prompt_1.question.format_dict = {'message': message}
+        if function and not multiple:
+            s, m = function(self.__filepaths)
+            successes.append(s)
+            messages.append(m)
+
+        else:
+            for filepath in self.__filepaths:
+
+                if function:
+                    s, m = function(filepath)
+                    successes.append(s)
+                    messages.append(m)
+
+                else:
+                    df, m = pandas_extension.read_spreadsheet(filepath)
+                    successes.append(not df.empty)
+                    messages.append(m)
+                    self.__dfs.append(df)               
+
+        if all(successes):
+            self.__prompt_1.question.format_dict = {'message': "\n".join(messages)}
             self.__node_0.set_next(self.__node_2)
         else:
-            self.__prompt_0.question.format_dict = {'error': message}
+            self.__prompt_0.question.format_dict = {'error': "\n".join(messages)}
             self.__node_0.set_next(self.__node_1)
 
     def _filedialog(self):
         tk = Tk()
         tk.withdraw()
-        self.__filepath = filedialog.askopenfilename(filetypes=[('Spreadsheet files', 
+        self.__filepaths = filedialog.askopenfilenames(filetypes=[('Spreadsheet files', 
                                                                  ".xls .xlsx .xlsm .xlsb .ods .csv .tsv")])
         # to close the file dialog window
         tk.destroy()
         
-        if not self.__filepath:
+        if not self.__filepaths:
             self.__display_0.command.respond = True
             self.__entry_node.acknowledge = True
             self.__entry_node.set_next(self.__entry_node)
@@ -94,8 +112,8 @@ class ImportSpreadsheet(NodeBundle):
             self.__entry_node.set_next(self.__node_0)
  
     @property
-    def df(self):
-        return self.__df
+    def dfs(self):
+        return self.__dfs
 
 
 class ExportSpreadsheet(NodeBundle):
