@@ -10,7 +10,7 @@ from rapidfuzz import process, fuzz
 from tqdm import tqdm
 
 
-def read_spreadsheet(filepath):
+def read_spreadsheet(filepath, **kwargs):
 
     """Reads a spreadsheet format file and converts it to pandas.DataFrame
     
@@ -27,13 +27,13 @@ def read_spreadsheet(filepath):
 
     try:
         if ext in ('.xls', '.xlsx', '.xlsm', '.xlsb', '.ods'):
-            df = pandas.read_excel(filepath)
+            df = pandas.read_excel(filepath, **kwargs)
 
         elif ext == '.csv':
-            df = pandas.read_csv(filepath)
+            df = pandas.read_csv(filepath, **kwargs)
         
         elif ext == '.tsv':
-            df = pandas.read_table(filepath)
+            df = pandas.read_table(filepath, **kwargs)
         
         else:
             df = pandas.DataFrame()
@@ -198,7 +198,7 @@ class PandasMatcher:
 
     @df_to.setter
     def df_to(self, df):
-        self.__df_to = df.astype('string').replace(pandas.NA, '')
+        self.__df_to = df.astype(str).replace('nan', '')
         self.columns_to_match.clear()
 
         for column_to in self.__df_to.columns:
@@ -210,7 +210,7 @@ class PandasMatcher:
 
     @df_from.setter
     def df_from(self, df):
-        self.__df_from = df.astype('string').replace(pandas.NA, '')
+        self.__df_from = df.astype(str).replace('nan', '')
         self.columns_to_get.clear()
 
         for _, columns_from in self.columns_to_match.items():
@@ -312,7 +312,7 @@ class PandasMatcher:
         m_stat = df_matched['match_status'].value_counts()
 
         m_info = {
-            "Match Scores": f"{round(m_stat['MATCHED']/len(self.__df_to)*100, 2) if m_stat['MATCHED'] else 0}%",
+            "Total Match Score": f"{round(m_stat['MATCHED']/len(self.__df_to)*100, 2) if m_stat['MATCHED'] else 0}%",
             "Average Match Score": f"{round(sum(scores)/len(scores), 2) if scores else 0}%",
             "Highest Match Score": f"{round(max(scores), 2) if scores else -1}%",
             "Lowest Match Score": f"{round(min(scores), 2) if scores else -1}%"
