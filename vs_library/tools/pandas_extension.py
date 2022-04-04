@@ -279,6 +279,14 @@ class PandasMatcher:
 
         scores = []
 
+        for column in self.columns_to_get:
+            if column not in df_matched.columns:
+                df_matched[column] = ''
+
+        df_matched['match_status'] = ''
+        df_matched['row_index'] = ''
+        df_matched['match_score'] = ''
+
         for index_to in tqdm(range(0, len(self.__df_to))):
 
             match_scores = self._compute_score(choices, index_to, uniqueness)
@@ -299,7 +307,6 @@ class PandasMatcher:
 
             elif len(top_matches) > 1:
 
-                df_matched['row_index'] = df_matched['row_index'].astype('object')
                 df_matched.at[index_to, 'row_index'] = ', '.join(list(map(str, top_matches.keys())))
                 df_matched.at[index_to, 'match_status'] = 'AMBIGUOUS'
 
