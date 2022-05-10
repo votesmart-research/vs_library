@@ -307,7 +307,7 @@ class PandasMatcher:
 
             elif len(top_matches) > 1:
 
-                df_matched.at[index_to, 'row_index'] = ', '.join(list(map(str, top_matches.keys())))
+                df_matched.at[index_to, 'row_index'] = ', '.join([str(int(key) + 2) for key in top_matches.keys()])
                 df_matched.at[index_to, 'match_status'] = 'AMBIGUOUS'
 
             else:
