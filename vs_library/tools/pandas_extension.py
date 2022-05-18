@@ -185,6 +185,11 @@ class PandasMatcher:
         self.column_threshold = defaultdict(float)
         self.columns_to_match = defaultdict(list)
         self.columns_to_get = []
+        
+        # allowing columns to be grouped by the values found in it
+        # [column_1, column_2, ...]
+        self.column_groups = []
+
         self.required_threshold = 75.0
         self.cutoff = False
 
@@ -220,6 +225,28 @@ class PandasMatcher:
             if column_from in self.columns_to_match.keys():
                 self.columns_to_match[column_from].append(column_from)
 
+    @property
+    def similarities(self):
+
+        """
+        Calculate the similarities of each column
+        """
+
+        # {column_from_1: (similarity_score, average_match_length),...}
+        similarities = dict()
+
+        for column in self.__df_to.columns:
+            if column in self.__df_from.columns:
+                full_length = len(set(self.__df_to[column]))
+                intersected = len(set(self.__df_to[column]).intersection(set(self.__df_from[column])))
+
+                score = round(intersected/full_length * 100, 2)
+                average_rows_to_compare = len(self.__df_to)/intersected
+
+                similarities[column] = (score, average_rows_to_compare)
+
+        return similarities
+
     def _choices(self):
         
         choices = {}
@@ -233,15 +260,32 @@ class PandasMatcher:
 
         return choices
 
+    def __subset(self, row):
+        """
+        Grouped DataFrame by the values found in the comparative DataFrame
+        """
+        df = self.__df_from
+
+        for group in self.column_groups:
+            df = df[df[group]==row[group]]
+
+        return df.index
+
     def _compute_score(self, choices, index_to, uniqueness):
 
         match_scores = defaultdict(float)
+        row_to = self.__df_to.iloc[index_to]
+        indices_to_compare = self.__subset(row_to)
 
         for column_to, columns_from in self.columns_to_match.items():
 
             if columns_from:
-                row_to = self.__df_to.iloc[index_to]
-                matches = process.extract(row_to[column_to], choices[column_to],
+                value_to_compare = row_to[column_to]
+                query = choices[column_to].iloc[indices_to_compare]
+                if query.empty:
+                    query = choices[column_to]
+
+                matches = process.extract(value_to_compare, query,
                                           scorer=fuzz.WRatio,
                                           limit=len(self.__df_from),
                                           score_cutoff=0 if not self.cutoff 
@@ -319,7 +363,7 @@ class PandasMatcher:
         m_stat = df_matched['match_status'].value_counts()
 
         m_info = {
-            "Total Match Score": f"{round(m_stat['MATCHED']/len(self.__df_to)*100, 2) if m_stat['MATCHED'] else 0}%",
+            "Total Match Score": f"{round(m_stat['MATCHED']/len(self.__df_to) * 100, 2) if m_stat['MATCHED'] else 0}%",
             "Average Match Score": f"{round(sum(scores)/len(scores), 2) if scores else 0}%",
             "Highest Match Score": f"{round(max(scores), 2) if scores else -1}%",
             "Lowest Match Score": f"{round(min(scores), 2) if scores else -1}%"
