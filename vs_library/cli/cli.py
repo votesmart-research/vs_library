@@ -258,7 +258,7 @@ class Node:
     @property
     def name(self):
         # returns the cliobject name for better identificaiton
-        return self.cliobject.name + self.__name
+        return f"{self.cliobject.name}_{self.__name}"
     
     @name.setter
     def name(self, name):
