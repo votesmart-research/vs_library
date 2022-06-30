@@ -93,27 +93,27 @@ class Incumbents:
             WHERE (
                 (:year BETWEEN EXTRACT(year FROM to_date(termstart, 'mm/dd/yyyy'))
                            AND EXTRACT(year FROM to_date(termend, 'mm/dd/yyyy'))            
-                AND EXTRACT(year FROM to_date(termstart, 'mm/dd/yyyy')) > 1000)
+                AND EXTRACT(year FROM to_date(termstart, 'mm/dd/yyyy')) > 1776)
             OR
                 (:year BETWEEN EXTRACT(year FROM to_date(termstart,'mm/yyyy'))
                            AND EXTRACT(year FROM to_date(termend, 'mm/yyyy'))
-                AND EXTRACT(year FROM to_date(termstart, 'mm/yyyy')) > 1000)
+                AND EXTRACT(year FROM to_date(termstart, 'mm/yyyy')) > 1776)
             OR
                 (:year BETWEEN EXTRACT(year FROM to_date(termstart,'yyyy'))
                            AND EXTRACT(year FROM to_date(termend, 'yyyy'))
-                AND EXTRACT(year FROM to_date(termstart, 'yyyy')) > 1000)
+                AND EXTRACT(year FROM to_date(termstart, 'yyyy')) > 1776)
             OR
                 (:year BETWEEN EXTRACT(year FROM to_date(termstart,'mm/dd/yyyy'))
                            AND EXTRACT(year FROM CASE WHEN termend ISNULL THEN now() END)
-                AND EXTRACT(year FROM to_date(termstart, 'mm/dd/yyyy')) > 1000)
+                AND EXTRACT(year FROM to_date(termstart, 'mm/dd/yyyy')) > 1776)
             OR
                 (:year BETWEEN EXTRACT(year FROM to_date(termstart,'mm/yyyy'))
                            AND EXTRACT(year FROM CASE WHEN termend ISNULL THEN now() END)
-                AND EXTRACT(year FROM to_date(termstart, 'mm/yyyy')) > 1000)
+                AND EXTRACT(year FROM to_date(termstart, 'mm/yyyy')) > 1776)
             OR
                 (:year BETWEEN EXTRACT(year FROM to_date(termstart,'yyyy'))
                            AND EXTRACT(year FROM CASE WHEN termend ISNULL THEN now() END)
-                AND EXTRACT(year FROM to_date(termstart, 'yyyy')) > 1000)
+                AND EXTRACT(year FROM to_date(termstart, 'yyyy')) > 1776)
                 )
             AND office_candidate.state_id IN ({states})
             AND (office.office_id IN ({office_ids})
