@@ -1,11 +1,14 @@
 
 # built-ins
-from tkinter import Tk, filedialog
+# from tkinter import Tk, filedialog
 
 # internal packages
 from . import pandas_extension
 from ..cli import Node, NodeBundle, DecoyNode, textformat
 from ..cli.objects import Command, Display, Prompt, Table
+
+# external packages
+from PySide6 import QtWidgets
 
 
 class ImportSpreadsheets(NodeBundle):
@@ -68,12 +71,12 @@ class ImportSpreadsheets(NodeBundle):
         successes = []
 
         if function and not multiple:
-            s, m = function(self.__filepaths)
+            s, m = function(self.__filepaths[0])
             successes.append(s)
             messages.append(m)
 
         else:
-            for filepath in self.__filepaths:
+            for filepath in self.__filepaths[0]:
 
                 if function:
                     s, m = function(filepath)
@@ -94,14 +97,22 @@ class ImportSpreadsheets(NodeBundle):
             self.__node_0.set_next(self.__node_1)
 
     def _filedialog(self):
-        tk = Tk()
-        tk.withdraw()
-        self.__filepaths = filedialog.askopenfilenames(filetypes=[('Spreadsheet files', 
-                                                                 ".xls .xlsx .xlsm .xlsb .ods .csv .tsv")])
-        # to close the file dialog window
-        tk.destroy()
+
+        # DEPRECATED---->
+        # tk = Tk()
+        # tk.withdraw()
+        # self.__filepaths = filedialog.askopenfilenames(filetypes=[('Spreadsheet files', 
+        #                                                          ".xls .xlsx .xlsm .xlsb .ods .csv .tsv")])
+        # # to close the file dialog window
+        # tk.destroy()
+        # <-----
+
+        app = QtWidgets.QApplication()
+        dialog = QtWidgets.QFileDialog(parent=None)
+        self.__filepaths = dialog.getOpenFileNames(filter="Spreadsheet files (*.xls *.xlsx *.xlsm *.xlsb *.ods *.csv *.tsv")
+        app.shutdown()
         
-        if not self.__filepaths:
+        if not self.__filepaths[0]:
             self.__display_0.command.respond = True
             self.__entry_node.acknowledge = True
             self.__entry_node.set_next(self.__entry_node)
@@ -156,9 +167,9 @@ class ExportSpreadsheet(NodeBundle):
 
     def _execute(self, function=None, df=None):
         if function:
-            success, message = function(self.__filepath)
+            success, message = function(self.__filepath[0])
         else:
-            success, message = pandas_extension.to_spreadsheet(df, self.__filepath)
+            success, message = pandas_extension.to_spreadsheet(df, self.__filepath[0])
 
         if success:
             self.__node_0.set_next(self.__exit_node)
@@ -172,15 +183,23 @@ class ExportSpreadsheet(NodeBundle):
         
 
     def _filedialog(self):
-        tk = Tk()
-        tk.withdraw()
 
-        self.__filepath = filedialog.asksaveasfilename(filetypes=[('Spreadsheet files', 
-                                                                   ".ods .xlsx .xlsm .xlsb .ods .csv .tsv")])
-        # to close the file dialog window
-        tk.destroy()
+        # DEPRECATED---->
+        # tk = Tk()
+        # tk.withdraw()
 
-        if not self.__filepath:
+        # self.__filepath = filedialog.asksaveasfilename(filetypes=[('Spreadsheet files', 
+        #                                                            ".ods .xlsx .xlsm .xlsb .ods .csv .tsv")])
+        # # to close the file dialog window
+        # tk.destroy()
+        # <-----
+
+        app = QtWidgets.QApplication()
+        dialog = QtWidgets.QFileDialog(parent=None)
+        self.__filepath = dialog.getSaveFileName(filter="Spreadsheet files (*.xls *.xlsx *.xlsm *.xlsb *.ods *.csv *.tsv")
+        app.shutdown()
+
+        if not self.__filepath[0]:
             self.__display_0.command.respond = True
             self.__entry_node.acknowledge = True
             self.__entry_node.set_next(self.__entry_node)
