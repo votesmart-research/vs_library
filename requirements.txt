@@ -1,6 +1,9 @@
 pandas
 pg8000
-odfpy
 rapidfuzz
 python-Levenshtein
 tabulate
+PySide6
+odfpy
+openpyxl
+xlrd
