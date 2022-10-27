@@ -363,13 +363,12 @@ class PandasMatcher:
         m_stat = df_matched['match_status'].value_counts()
 
         m_info = {
-            "Total Match Score": f"{round(m_stat['MATCHED']/len(self.__df_to) * 100, 2) if m_stat['MATCHED'] else 0}%",
+            "Total Match Score": f"{round(m_stat['MATCHED']/len(self.__df_to) * 100, 2) if 'MATCHED' in m_stat.index else 0}%",
             "Average Match Score": f"{round(sum(scores)/len(scores), 2) if scores else 0}%",
             "Highest Match Score": f"{round(max(scores), 2) if scores else -1}%",
             "Lowest Match Score": f"{round(min(scores), 2) if scores else -1}%"
             }
 
         m_info.update(m_stat)
-
         return df_matched, m_info
 
