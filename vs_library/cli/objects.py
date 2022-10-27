@@ -130,38 +130,8 @@ class Display(CliObject):
 
 class Prompt(CliObject):
 
-    """
-    The Prompt class is a CliObject that allows user inputs in response to a prompt
-    
-    Attributes
-    ----------
-    responses : list
-        May contain more than one response if multiple_selection is True,
-        returns a string if multiple_selection is False
-    
-    error_msg : str
-        A statement to inform user that input is invalid
-    """
-
     def __init__(self, question, options=None, verification=None, multiple_selection=False, command=None):
 
-        """
-        Parameters
-        ----------
-        question : str
-            A statement in a form of a question, used for prompting
-        
-        options : dict, optional
-            Keys of dict are the options that the user selects
-            while values are the description
-
-        verification : function, optional
-            Function that returns a boolean and optionally an error message along it
-            (the return value of the function must be a boolean FIRST then error message)
-
-        multiple_selection : bool, optional
-            if True, the user can select multiple options separated by comma
-        """
 
         super().__init__(name='prompt', command=command, exe_seq='after')
 
@@ -188,19 +158,6 @@ class Prompt(CliObject):
     
     def option_responses(self, string=True):
 
-        """
-        Returns the option values of the user response
-        
-        Parameters
-        ---------
-        string : bool, default=True
-            Change the return variable to a string, will return a list if False
-        
-        Returns
-        -------
-        str or list
-            String concatenation of an array object or an array of responses
-        """
 
         responses = []
 
@@ -213,18 +170,6 @@ class Prompt(CliObject):
 
     def _verify(self):
 
-        """
-        Verifies the user reponse
-
-        User will only be allowed to give response according to the options given.
-        If no options are given, user response will be verified via a function call, 
-        limiting only to responses that met the criteria of the function
-        
-        Returns
-        -------
-        bool
-            True if the verification passes
-        """
 
         # the presence of verification will take precedence over verifying against option given
         if self.verification:
@@ -296,20 +241,10 @@ class Prompt(CliObject):
 
     def clear(self):
 
-        """Clears all user responses"""
-
         if self.__responses:
             self.__responses.clear()
 
     def __str__(self):
-
-        """
-        Returns a formatted string such as:
-        
-            [1]  Select Me
-            [2]  No, select me
-
-        """
 
         if self.multiple_selection:
             options_msg = textformat.apply("Please enter one or more of the options above separated by a comma", 
