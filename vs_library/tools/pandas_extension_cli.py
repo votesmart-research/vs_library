@@ -120,7 +120,7 @@ class ImportSpreadsheets(NodeBundle):
         else:
             self.__display_0.command.respond = False
             self.__entry_node.acknowledge = False
-            self.__entry_node.set_next(self.__node_0)
+            self.__entry_node.set_next(self.__node_0)   
  
     @property
     def dfs(self):
@@ -243,6 +243,7 @@ class PMSettings(NodeBundle):
         self.__bundle_0 = PMSetColumnThreshold(pandas_matcher, parent=self.__entry_node)
         self.__bundle_1 = PMSetColumnsToMatch(pandas_matcher, parent=self.__entry_node)
         self.__bundle_2 = PMSetColumnsToGet(pandas_matcher, parent=self.__entry_node)
+        self.__bundle_3 = PMSetColumnGroups(pandas_matcher, parent=self.__entry_node)
 
         self.__exit_node = DecoyNode(name=f'{name}_last-node')
 
@@ -250,6 +251,7 @@ class PMSettings(NodeBundle):
         self.__node_0.adopt(self.__bundle_0.entry_node)
         self.__node_0.adopt(self.__bundle_1.entry_node)
         self.__node_0.adopt(self.__bundle_2.entry_node)
+        self.__node_0.adopt(self.__bundle_3.entry_node)
         self.__node_1.adopt(self.__entry_node)
 
         self.__entry_node.set_next(self.__node_0)
@@ -263,12 +265,13 @@ class PMSettings(NodeBundle):
             '1': Command(lambda: self.__node_0.set_next(self.__bundle_0.entry_node), value="Set Column Threshold"),
             '2': Command(lambda: self.__node_0.set_next(self.__bundle_1.entry_node), value="Set Columns To Match"),
             '3': Command(lambda: self.__node_0.set_next(self.__bundle_2.entry_node), value="Set Columns to Get"),
-            '4': Display("Toggle Cutoff: {status}", format_dict={'status': self.__format_yes if pandas_matcher.cutoff 
+            '4': Command(lambda: self.__node_0.set_next(self.__bundle_3.entry_node), value="Set Columns to Group"),
+            '5': Display("Toggle Cutoff: {status}", format_dict={'status': self.__format_yes if pandas_matcher.cutoff 
                                                                   else self.__format_no},
                                                      command=Command(self._toggle_cutoff,
                                                      command=Command(lambda: self.__node_0.set_next(self.__entry_node)))),
 
-            '5': Display("Required Threshold: {value}", format_dict={'value': format_threshold},
+            '6': Display("Required Threshold: {value}", format_dict={'value': format_threshold},
                          command=Command(lambda: self.__node_0.set_next(self.__node_1)))
         }
 
@@ -634,6 +637,77 @@ class PMSetColumnsToGet(NodeBundle):
         
         self.__prompt_2.options.clear()
         columns = self.pandas_matcher.columns_to_get
+
+        for index, column in enumerate(columns, 1):
+            self.__prompt_2.options[str(index)] = Command(lambda column=column: columns.remove(column), value=column)
+
+        self.__prompt_2.options['R'] = Command(lambda: self.__node_2.set_next(self.__entry_node), value="Return")
+
+
+class PMSetColumnGroups(NodeBundle):
+    def __init__(self, pandas_matcher, parent=None):
+
+        name = "pandas-matcher_set-column-groups"
+        self.pandas_matcher = pandas_matcher
+        
+        # OBJECTS
+        self.__table_0 = Table([['Columns to Group']],
+                               command=Command(self._populate_table))
+        self.__prompt_0 = Prompt("Select the following action:")
+        self.__prompt_1 = Prompt("What column would you like to add?", multiple_selection=True,
+                                 command=Command(self._populate_prompt_add))
+        self.__prompt_2 = Prompt("What column would you like to remove?", multiple_selection=True,
+                                 command=Command(self._populate_prompt_remove))
+
+        # NODES
+        self.__entry_node = Node(self.__table_0, name=f"{name}_columns",
+                                 clear_screen=True)
+        self.__node_0 = Node(self.__prompt_0, name=f"{name}_select-action", parent=self.__entry_node)
+        self.__node_1 = Node(self.__prompt_1, name=f"{name}_add-column", parent=self.__node_0)
+        self.__node_2 = Node(self.__prompt_2, name=f"{name}_remove-column", parent=self.__node_0)
+        self.__exit_node = DecoyNode()
+
+        self.__node_1.adopt(self.__entry_node)
+        self.__node_2.adopt(self.__entry_node)
+
+        # CONFIGURATIONS
+        self.__prompt_1.exe_seq = 'before'
+        self.__prompt_2.exe_seq = 'before'
+
+        self.__prompt_0.options = {
+            '1': Command(lambda: self.__node_0.set_next(self.__node_1), value="Add columns"),
+            '2': Command(lambda: self.__node_0.set_next(self.__node_2), value="Remove columns")
+        }
+
+        if isinstance(parent, Node):
+            self.__node_0.adopt(parent)
+            self.__prompt_0.options ['R'] = Command(lambda: self.__node_0.set_next(parent), value="Return")
+        elif isinstance(parent, NodeBundle):
+            self.__node_0.adopt(parent.entry_node)
+            self.__prompt_0.options ['R'] = Command(lambda: self.__node_0.set_next(parent.entry_node), value="Return")
+
+        super().__init__(self.__entry_node, self.__exit_node, parent=parent, name=name)
+
+    def _populate_table(self):
+        self.__table_0.clear()
+        for column in self.pandas_matcher.column_groups:
+            self.__table_0.table.append([column])
+
+    def _populate_prompt_add(self):
+        self.__prompt_1.options.clear()
+
+        columns = self.pandas_matcher.column_groups
+        columns_not_added = [c for c in self.pandas_matcher.df_from.columns if c not in columns]
+
+        for index, column in enumerate(columns_not_added, 1):
+            self.__prompt_1.options[str(index)] = Command(lambda column=column: columns.append(column), value=column)
+
+        self.__prompt_1.options['R'] = Command(lambda: self.__node_1.set_next(self.__entry_node), value="Return")
+
+    def _populate_prompt_remove(self):
+        
+        self.__prompt_2.options.clear()
+        columns = self.pandas_matcher.column_groups
 
         for index, column in enumerate(columns, 1):
             self.__prompt_2.options[str(index)] = Command(lambda column=column: columns.remove(column), value=column)
