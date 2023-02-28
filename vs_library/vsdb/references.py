@@ -15,7 +15,9 @@ OFFICE = {
         '44': 'Secretary of State',
         '78': 'Chief Justice of the Supreme Court',
         '79': 'Justice of the Supreme Court',
-        '390': 'Delegate'
+        '390': 'Delegate',
+        '496': 'Board of Education',
+        '517': 'State Board of Education'
     }
 
 # Key-value pair between officetype_id and type of office from the 'officetype' table
