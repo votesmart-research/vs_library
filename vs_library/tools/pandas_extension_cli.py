@@ -288,14 +288,14 @@ class PMSettings(NodeBundle):
         self.pandas_matcher.cutoff = not self.pandas_matcher.cutoff
 
         if self.pandas_matcher.cutoff:
-            self.__prompt_0.options['4'].format_dict['status'] = self.__format_yes
+            self.__prompt_0.options['5'].format_dict['status'] = self.__format_yes
         else:
-            self.__prompt_0.options['4'].format_dict['status'] = self.__format_no
-
+            self.__prompt_0.options['5'].format_dict['status'] = self.__format_no
+    
     def _set_threshold(self):
         self.pandas_matcher.required_threshold = float(self.__prompt_1.responses)
         format_threshold = textformat.apply(str(self.pandas_matcher.required_threshold), emphases=['bold', 'underline'])
-        self.__prompt_0.options['5'].format_dict = {'value': format_threshold}
+        self.__prompt_0.options['6'].format_dict = {'value': format_threshold}
 
 
 class PMSetColumnThreshold(NodeBundle):
