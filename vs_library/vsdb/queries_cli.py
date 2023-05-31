@@ -228,7 +228,7 @@ class CandidateQueryForm(NodeBundle):
 
         self.__prompt_6.options = {
             '1': Command(self._execute, value="Yes",
-                         command=Command(self.__node_7.set_next(self.__exit_node))),
+                         command=Command(lambda: self.__node_7.set_next(self.__exit_node))),
             '2': Command(lambda: self.__node_7.set_next(self.__node_0), value="No, re-enter responses")
             }
 
