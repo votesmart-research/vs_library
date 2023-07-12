@@ -201,7 +201,8 @@ class Node:
             If True, engine will prompt user to acknowledge a node with an input
 
         store : bool
-            If True, engine will store it in node selections otherwise disregarded
+            If True, engine will store it in node selections for the purpose of 
+            traversing (eg. go_back)
         """
 
         self.cliobject = cliobject

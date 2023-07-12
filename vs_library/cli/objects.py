@@ -130,7 +130,13 @@ class Display(CliObject):
 
 class Prompt(CliObject):
 
-    def __init__(self, question, options=None, verification=None, multiple_selection=False, command=None):
+    def __init__(self, 
+                 question, 
+                 options=None, 
+                 verification=None, 
+                 multiple_selection=False, 
+                 command=None,
+                 show_opt_msg=True):
 
 
         super().__init__(name='prompt', command=command, exe_seq='after')
@@ -139,6 +145,7 @@ class Prompt(CliObject):
         self.options = options if options else dict()
         self.verification = verification
         self.multiple_selection = multiple_selection
+        self.show_opt_msg = show_opt_msg
 
         self.__responses = []
         self.__error_msg = textformat.apply("Your input(s) are not recognizable, please try again.", 
@@ -203,12 +210,12 @@ class Prompt(CliObject):
         # to receive a response
         def _single(self):
             self.question.draw()
-            self.__responses = [input(f"{str(self)}: ")]
+            self.__responses = [input(f"{str(self)}>: ")]
 
         # to receive multiple responses
         def _multiple(self):
             self.question.draw()
-            self.__responses = input(f"{str(self)}: ").split(',')
+            self.__responses = input(f"{str(self)}>: ").split(',')
 
             # ** is a unique option that allows user to select all of the option
             if '**' in self.options.keys() and self.__responses == ['**']:
@@ -232,8 +239,9 @@ class Prompt(CliObject):
         if self.options:
             for r in set(self.__responses):
                 r = r.strip()
-                if isinstance(self.options[r], CliObject):
-                    self.options[r].execute()
+                if r in self.options:
+                    if isinstance(self.options[r], CliObject):
+                        self.options[r].execute()
 
     def execute(self):
         if isinstance(self.command, Command):
@@ -246,15 +254,20 @@ class Prompt(CliObject):
 
     def __str__(self):
 
-        if self.multiple_selection:
-            options_msg = textformat.apply("Please enter one or more of the options above separated by a comma", 
-                                           emphases=['italic'])
+        if self.show_opt_msg:
+            if self.multiple_selection:
+                options_msg = textformat.apply("Please enter one or more of the options above separated by a comma\n", 
+                                            emphases=['italic'])
+            else:
+                options_msg = textformat.apply("Please enter one of the options above\n", emphases=['italic'])
         else:
-            options_msg = textformat.apply("Please enter one of the options above", emphases=['italic'])
+            options_msg = ""
             
         options_str = '\n'.join([f'\t[{str(k)}] {str(v)}' for k, v in self.options.items()]) if self.options else ''
 
-        return f"\n{options_str}\n\n{options_msg}\n" if self.options else ''
+        combined = "\n".join((f"{options_str}\n", options_msg))
+
+        return f"\n{combined}" if self.options else ''
 
 
 class Table(CliObject):

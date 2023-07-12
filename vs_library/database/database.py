@@ -321,7 +321,7 @@ class QueryTool:
 
         elif as_format == 'records':
             rows, header = self.__results if self.__results else ([], [])
-            return [dict(zip(header, row)) for row in rows]
+            return {index:dict(zip(header, row)) for index, row in enumerate(rows)}
 
         elif as_format == 'pandas_df':
             rows, header = self.__results if self.__results else ([], [])
