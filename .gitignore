@@ -133,3 +133,6 @@ dmypy.json
 */.DS_Store
 *.ini
 test*
+main.py
+.vscode
+tabular_matcher
