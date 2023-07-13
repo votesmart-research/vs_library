@@ -401,10 +401,10 @@ class TBSetColumnsToGet(NodeBundle):
 
         # NODES
         self.__entry_node = Node(
-            self.__table_0, name=f"{name}_columns", clear_screen=True,
+            self.__table_0, name=f"{name}_columns", clear_screen=True, store=False
         )
         self.__node_0 = Node(
-            self.__prompt_0, name=f"{name}_select-action", parent=self.__entry_node
+            self.__prompt_0, name=f"{name}_select-action", parent=self.__entry_node, store=False
         )
         self.__node_1 = Node(
             self.__prompt_1, name=f"{name}_add-column", parent=self.__node_0
@@ -539,12 +539,11 @@ class TBSetColumnsToMatch(NodeBundle):
         self.__prompt_0 = Prompt("What would you like to change?")
 
         # NODES
-        self.__entry_node = Node(self.__table_0, name=name)
+        self.__entry_node = Node(
+            self.__table_0, name=name, store=False
+        )
         self.__node_0 = Node(
-            self.__prompt_0,
-            name=f"{name}_select-change",
-            parent=self.__entry_node,
-            store=False,
+            self.__prompt_0, name=f"{name}_select-change", parent=self.__entry_node, store=False,
         )
         self.__exit_node = DecoyNode(name=f"{name}_last-node", parent=self.__node_0)
 
@@ -610,15 +609,17 @@ class _TBToMatch(NodeBundle):
         )
 
         # NODES
-        self.__entry_node = Node(full_table, name=name, store=False)
+        self.__entry_node = Node(
+            full_table, name=name
+        )
         self.__node_0 = Node(
-            self.__prompt_0, name=f"{name}_select-action", parent=self.__entry_node
+            self.__prompt_0, name=f"{name}_select-action", parent=self.__entry_node, store=False
         )
         self.__node_1 = Node(
-            self.__prompt_1, name=f"{name}_add-col", parent=self.__node_0
+            self.__prompt_1, name=f"{name}_add-col", parent=self.__node_0, store=False
         )
         self.__node_2 = Node(
-            self.__prompt_2, name=f"{name}_remove-col", parent=self.__node_0
+            self.__prompt_2, name=f"{name}_remove-col", parent=self.__node_0, store=False
         )
         self.__exit_node = DecoyNode(name=f"{name}_not-an-exit")
 
@@ -704,21 +705,23 @@ class _TBMatchWith(NodeBundle):
         )
 
         # NODES
-        self.__entry_node = Node(full_table)
+        self.__entry_node = Node(
+            full_table
+        )
         self.__node_0 = Node(
-            self.__prompt_0, name=f"{name}_select-column", parent=self.__entry_node
+            self.__prompt_0, name=f"{name}_select-column", parent=self.__entry_node, store=False
         )
         self.__node_1 = Node(
-            self.__table_0, name=f"{name}_match-with", parent=self.__node_0
+            self.__table_0, name=f"{name}_match-with", parent=self.__node_0,
         )
         self.__node_2 = Node(
-            self.__prompt_1, name=f"{name}_select-action", parent=self.__node_1
+            self.__prompt_1, name=f"{name}_select-action", parent=self.__node_1, store=False
         )
         self.__node_3 = Node(
-            self.__prompt_2, name=f"{name}_add-col", parent=self.__node_2
+            self.__prompt_2, name=f"{name}_add-col", parent=self.__node_2, store=False
         )
         self.__node_4 = Node(
-            self.__prompt_3, name=f"{name}_remove-col", parent=self.__node_2
+            self.__prompt_3, name=f"{name}_remove-col", parent=self.__node_2, store=False
         )
         self.__exit_node = DecoyNode()
 
@@ -841,19 +844,19 @@ class TBSetColumnsToGroup(NodeBundle):
 
         # NODES
         self.__entry_node = Node(
-            self.__table_0, name=f"{name}_columns", clear_screen=True
+            self.__table_0, name=f"{name}_columns", clear_screen=True, store=False
         )
         self.__node_0 = Node(
-            self.__prompt_0, name=f"{name}_select-action", parent=self.__entry_node
+            self.__prompt_0, name=f"{name}_select-action", parent=self.__entry_node, store=False
         )
         self.__node_1 = Node(
-            self.__prompt_1, name=f"{name}_add-column-y", parent=self.__node_0
+            self.__prompt_1, name=f"{name}_add-column-y", parent=self.__node_0, store=False
         )
         self.__node_2 = Node(
-            self.__prompt_2, name=f"{name}_remove-column-y", parent=self.__node_0
+            self.__prompt_2, name=f"{name}_remove-column-y", parent=self.__node_0, store=False
         )
         self.__node_3 = Node(
-            self.__prompt_3, name=f"{name}_add-column-x", parent=self.__node_1
+            self.__prompt_3, name=f"{name}_add-column-x", parent=self.__node_1, store=False
         )
         self.__exit_node = DecoyNode()
 
@@ -939,7 +942,7 @@ class TBSetColumnsToGroup(NodeBundle):
                 command=Command(lambda: self.__node_3.set_next(self.__entry_node))
             )
 
-        self.__prompt_1.options["R"] = Command(
+        self.__prompt_3.options["R"] = Command(
             lambda: self.__node_3.set_next(self.__node_1), value="Return"
         )
 
@@ -966,19 +969,14 @@ class TBSetColumnThreshold(NodeBundle):
         )
 
         # NODES
-        self.__entry_node = Node(self.__table_0, name=name, store=False, clear_screen=True)
-
+        self.__entry_node = Node(
+            self.__table_0, name=name, clear_screen=True,store=False,
+        )
         self.__node_0 = Node(
-            self.__prompt_0,
-            name=f"{name}_select",
-            parent=self.__entry_node,
-            store=False,
+            self.__prompt_0, name=f"{name}_select", parent=self.__entry_node, store=False,
         )
         self.__node_1 = Node(
-            self.__prompt_1, 
-            name=f"{name}_change", 
-            parent=self.__node_0, 
-            store=False
+            self.__prompt_1, name=f"{name}_change", parent=self.__node_0, store=False
         )
 
         self.__exit_node = DecoyNode()
@@ -1050,23 +1048,17 @@ class TBSetColumnScorers(NodeBundle):
         )
         self.__prompt_1 = Prompt(
             "What is the scorer you would like to change to?",
-            command=Command(self._execute),
         )
 
         # NODES
-        self.__entry_node = Node(self.__table_0, name=name, store=False, clear_screen=True)
-
+        self.__entry_node = Node(
+            self.__table_0, name=name, clear_screen=True, store=False, 
+        )
         self.__node_0 = Node(
-            self.__prompt_0,
-            name=f"{name}_select",
-            parent=self.__entry_node,
-            store=False,
+            self.__prompt_0, name=f"{name}_select", parent=self.__entry_node, store=False,
         )
         self.__node_1 = Node(
-            self.__prompt_1, 
-            name=f"{name}_change", 
-            parent=self.__node_0, 
-            store=False
+            self.__prompt_1, name=f"{name}_change", parent=self.__node_0, store=False
         )
 
         self.__exit_node = DecoyNode()
@@ -1123,8 +1115,11 @@ class TBSetColumnScorers(NodeBundle):
         self.__prompt_1.options.clear()
 
         for index, scorer in enumerate(self.tb_config.scorers_by_column.SCORERS, 1):
-            self.__prompt_1.options[str(index)] = scorer
+            self.__prompt_1.options[str(index)] = Command(self._execute, value=scorer)
 
+        self.__prompt_1.options['R'] = Command(
+            lambda: self.__node_1.set_next(self.__entry_node), value='Return'
+        )
         self.__node_0.set_next(self.__node_1)
 
 
@@ -1145,15 +1140,12 @@ class TBSetColumnCutoffs(NodeBundle):
         )
 
         # NODES
-        self.__entry_node = Node(self.__table_0, name=name, store=False, clear_screen=True)
-
-        self.__node_0 = Node(
-            self.__prompt_0, 
-            name=f"{name}_toggle", 
-            parent=self.__entry_node, 
-            store=False,
+        self.__entry_node = Node(
+            self.__table_0, name=name, clear_screen=True, store=False, 
         )
-
+        self.__node_0 = Node(
+            self.__prompt_0, name=f"{name}_toggle", parent=self.__entry_node, store=False,
+        )
         self.__exit_node = DecoyNode()
 
         self.__node_0.adopt(self.__entry_node)
