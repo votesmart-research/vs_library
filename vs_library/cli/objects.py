@@ -88,7 +88,7 @@ class Command(CliObject):
             self.command.execute()
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
 
 class Display(CliObject):

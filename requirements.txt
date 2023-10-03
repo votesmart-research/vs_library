@@ -1,7 +1,5 @@
 pandas
 pg8000
-rapidfuzz
-python-Levenshtein
 tabulate
 PySide6
 odfpy

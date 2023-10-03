@@ -6,8 +6,6 @@ from collections import defaultdict
 # external packages
 import pandas
 import numpy
-from rapidfuzz import process, fuzz
-from tqdm import tqdm
 
 
 def read_spreadsheet(filepath, **kwargs):

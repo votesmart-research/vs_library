@@ -1,5 +1,3 @@
-# built-ins
-# from tkinter import Tk, filedialog
 
 # internal packages
 from . import pandas_extension
