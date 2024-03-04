@@ -87,34 +87,33 @@ class Incumbents:
     def by_electdates(self):
 
         """Dates when incumbents are elected to their offices and when they resign"""
-
+        pre_statement = \
+            '''
+            WITH local_var AS (
+                SELECT :start_date::DATE AS termstarts,
+		               :end_date::DATE AS termends
+                )
+            '''
         statement = \
             '''
-            WHERE (
-                (:year BETWEEN EXTRACT(year FROM to_date(termstart, 'mm/dd/yyyy'))
-                           AND EXTRACT(year FROM to_date(termend, 'mm/dd/yyyy'))            
-                AND EXTRACT(year FROM to_date(termstart, 'mm/dd/yyyy')) > 1776)
-            OR
-                (:year BETWEEN EXTRACT(year FROM to_date(termstart,'mm/yyyy'))
-                           AND EXTRACT(year FROM to_date(termend, 'mm/yyyy'))
-                AND EXTRACT(year FROM to_date(termstart, 'mm/yyyy')) > 1776)
-            OR
-                (:year BETWEEN EXTRACT(year FROM to_date(termstart,'yyyy'))
-                           AND EXTRACT(year FROM to_date(termend, 'yyyy'))
-                AND EXTRACT(year FROM to_date(termstart, 'yyyy')) > 1776)
-            OR
-                (:year BETWEEN EXTRACT(year FROM to_date(termstart,'mm/dd/yyyy'))
-                           AND EXTRACT(year FROM CASE WHEN termend ISNULL THEN now() END)
-                AND EXTRACT(year FROM to_date(termstart, 'mm/dd/yyyy')) > 1776)
-            OR
-                (:year BETWEEN EXTRACT(year FROM to_date(termstart,'mm/yyyy'))
-                           AND EXTRACT(year FROM CASE WHEN termend ISNULL THEN now() END)
-                AND EXTRACT(year FROM to_date(termstart, 'mm/yyyy')) > 1776)
-            OR
-                (:year BETWEEN EXTRACT(year FROM to_date(termstart,'yyyy'))
-                           AND EXTRACT(year FROM CASE WHEN termend ISNULL THEN now() END)
-                AND EXTRACT(year FROM to_date(termstart, 'yyyy')) > 1776)
+            WHERE   
+	        NOT termstart ISNULL
+
+	        AND (to_date(termend, 'mm/dd/yyyy') > local_var.termstarts
+		        OR to_date(termend, 'mm/yyyy') > local_var.termstarts
+		        OR to_date(termend, 'yyyy') > local_var.termstarts
+		        OR CASE WHEN termend ISNULL THEN now() END > local_var.termstarts)
+
+	        AND (to_date(termstart, 'mm/dd/yyyy') < local_var.termends
+		        /* converting a full date ('mm/dd/yyyy') by partial match ('mm/yyyy' or 'yyyy') 
+		        would turn it into a smaller date, so the smaller date has to be larger than the
+		        termstart*/
+		        OR (to_date(termstart, 'mm/yyyy') < local_var.termends
+		        	AND to_date(termstart, 'mm/yyyy') > local_var.termstarts)
+		        OR (to_date(termstart, 'yyyy') < local_var.termends
+                    AND to_date(termstart, 'yyyy') > local_var.termstarts)
                 )
+            
             AND office_candidate.state_id IN ({states})
             AND (office.office_id IN ({office_ids})
                  OR office.officetype_id IN ({office_types}))
@@ -122,7 +121,7 @@ class Incumbents:
                      office_types=','.join([f':{k}' for k in self.__enum_office_types.keys()]),
                            states=','.join([f':{k}' for k in self.__enum_states.keys()]))
 
-        return Incumbents.statement + statement, self.__conditions
+        return pre_statement + Incumbents.statement + statement, self.__conditions
 
 
 class ElectionCandidates:

@@ -22,7 +22,7 @@ config = {
     'description': "Research Tools for Vote Smart",
     'author': "Johanan Tai",
     'author_email': "jtai.dvlp@gmail.com",
-    'version': '0.0.2',
+    'version': '0.0.3',
     'install_requires': install_requires,
     'url': 'https://github.com/votesmart-projects/vs_library',
     'packages': ['vs_library', 'vs_library.cli', 'vs_library.database', 'vs_library.tools', 'vs_library.vsdb'],
