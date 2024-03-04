@@ -96,6 +96,8 @@ class Incumbents:
             '''
         statement = \
             '''
+            CROSS JOIN local_var
+            
             WHERE   
 	        NOT termstart ISNULL
 
