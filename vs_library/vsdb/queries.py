@@ -21,11 +21,11 @@ class Incumbents:
 
         FROM office_candidate
         JOIN candidate USING (candidate_id)
-        JOIN office_candidate_party USING (office_candidate_id)
-
+        
         LEFT JOIN office USING (office_id)
         LEFT JOIN state ON office_candidate.state_id = state.state_id
         LEFT JOIN districtname USING (districtname_id)
+        LEFT JOIN office_candidate_party USING (office_candidate_id)
         LEFT JOIN party USING (party_id)
         '''
     # parameters are declared during construction as they will be used in instance methods
@@ -51,7 +51,7 @@ class Incumbents:
 
         self.__conditions = {'year': int(max(active_years)),
                              'start_date': f'01-01-{min(active_years)}',
-                             'end_date': f'12-31-{max(active_years)}'}
+                             'end_date': f'01-03-{max(active_years) + 1}'}
 
         # dict keys-value will be replace with an empty placeholder if not given so query could run
         self.__enum_office_ids = {f"office_id_{k}": v for k, v in enumerate(office_ids)
