@@ -98,10 +98,8 @@ class Incumbents:
             '''
             CROSS JOIN local_var
             
-            WHERE   
-	        NOT termstart ISNULL
-
-	        AND (to_date(termend, 'mm/dd/yyyy') > local_var.termstarts
+            WHERE 
+                (to_date(termend, 'mm/dd/yyyy') > local_var.termstarts
 		        OR to_date(termend, 'mm/yyyy') > local_var.termstarts
 		        OR to_date(termend, 'yyyy') > local_var.termstarts
 		        OR CASE WHEN termend ISNULL THEN now() END > local_var.termstarts)
@@ -114,6 +112,9 @@ class Incumbents:
 		        	AND to_date(termstart, 'mm/yyyy') > local_var.termstarts)
 		        OR (to_date(termstart, 'yyyy') < local_var.termends
                     AND to_date(termstart, 'yyyy') > local_var.termstarts)
+                OR (CASE WHEN termstart ISNULL THEN 
+			            (CASE WHEN officecandidatestatus_id = 1 THEN now() END < local_var.termends)
+			        END)
                 )
             
             AND office_candidate.state_id IN ({states})
