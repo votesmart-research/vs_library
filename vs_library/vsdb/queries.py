@@ -51,7 +51,7 @@ class Incumbents:
 
         self.__conditions = {'year': int(max(active_years)),
                              'start_date': f'01-01-{min(active_years)}',
-                             'end_date': f'01-03-{max(active_years) + 1}'}
+                             'end_date': f'01-03-{int(max(active_years)) + 1}'}
 
         # dict keys-value will be replace with an empty placeholder if not given so query could run
         self.__enum_office_ids = {f"office_id_{k}": v for k, v in enumerate(office_ids)
